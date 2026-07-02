@@ -1,9 +1,7 @@
 # LSG.SDK.Core
 
-SDK-core reutilizable para conectar mods de videojuegos con el ecosistema
-LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster
-BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en
-cualquier cluster C# (SMAPI, tModLoader) sin cambios.
+SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster
+BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
 ## Principio de diseño
 
@@ -15,10 +13,8 @@ Este SDK **no conoce nada del juego**. Solo resuelve:
 4. Canje (`redeem/preview` + `redeem`)
 5. Cola offline (`POST /offline/sync`)
 
-La traducción de una mecánica (`buff`, `modifier`, ...) a la mecánica real
-del juego (Harmony patch, evento SMAPI, etc.) la implementa **cada
-adaptador de juego** vía `IEffectInterpreter`. Esto es lo que permite
-mantener cada mod de forma independiente, con distintos ciclos de release,
+La traducción de una mecánica (`buff`, `modifier`, ...) a la mecánica real del juego (Harmony patch, evento SMAPI, etc.) la implementa **cada
+adaptador de juego** vía `IEffectInterpreter`. Esto es lo que permite mantener cada mod de forma independiente, con distintos ciclos de release,
 sin tocar este SDK.
 
 ```
@@ -38,7 +34,7 @@ Valheim.LSG.Mod (repo aparte)
   └── ValheimEffectInterpreter : IEffectInterpreter ...
 ```
 
-## Contrato de referencia — mecánicas mínimas cargadas (2026-07-02)
+## Contrato de referencia — mecánicas mínimas cargadas
 
 | Juego (id) | mmv_id | Nombre | Tipo | Dimensión objetivo |
 |---|---|---|---|---|
@@ -146,20 +142,15 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 // tracker.Tick() llamado desde Update()/heartbeat del mod-loader.
 ```
 
-**Limitación conocida:** `TimedEffectTracker` es en memoria — si el proceso
-del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin
-revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta
-el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema
-real, la solución es persistir `TimedEffect` en un archivo local del
-adaptador y rehidratar el tracker en `Awake()`.
+**Limitación conocida:** `TimedEffectTracker` es en memoria — si el proceso del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema
+real, la solución es persistir `TimedEffect` en un archivo local del adaptador y rehidratar el tracker en `Awake()`.
 
 ## Pendientes conocidos (no bloqueantes para M1)
 
-- `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una
-  iteración futura debe parsear el detalle por evento (`SYNCED` /
-  `DUPLICATE` / `REJECTED`) y re-encolar solo los rechazados por causa
-  transitoria.
-- `IEffectInterpreter` no define aún un mecanismo de rollback si `Apply()`
-  falla después de un `redeem` exitoso (puntos ya debitados, efecto no
-  aplicado). Decisión pendiente: ¿reintento local, o endpoint de
-  compensación en el core? A discutir antes de M3.
+- `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una iteración futura debe parsear el detalle por evento (`SYNCED` / `DUPLICATE` / `REJECTED`) y re-encolar solo los rechazados por causa transitoria.
+- `IEffectInterpreter` no define aún un mecanismo de rollback si `Apply()` falla después de un `redeem` exitoso (puntos ya debitados, efecto no aplicado). Decisión pendiente: ¿reintento local, o endpoint de compensación en el core? A discutir antes de M3.
+
+## Referencias
+
+- R. González-Ibáñez, J. I. Macías-Cáceres and M. V. Paucar, "LifeSync-Games: A Technical Note on a Novel Framework for Video Game Development," 2025 44th International Conference of the Chilean Computer Science Society (SCCC), Valparaiso, Chile, 2025, pp. 1-4, doi: 10.1109/SCCC67219.2025.11420722.
+- González-Ibáñez R., Macías-Cáceres J., Villalta-Paucar M. (2025). *LifeSync-Games: Toward a Video Game Paradigm for Promoting Responsible Gaming and Human Development*. arXiv:2510.19691 [cs.HC]. DOI: https://arxiv.org/abs/2510.19691

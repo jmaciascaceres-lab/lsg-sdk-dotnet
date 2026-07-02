@@ -39,7 +39,18 @@ Cada adaptador nuevo se agrega como `adapters/<Juego>.LSG.Mod/` y referencia `LS
 
 Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargadas y el diseño de `IEffectInterpreter`.
 
+## BepInEx
+
+- `Core Keeper` -> https://thunderstore.io/c/core-keeper/p/BepInEx/BepInExPack_Core_Keeper/
+
 ## Changelog
+
+### v0.1.0 (2026-07-03)
+
+**Features:**
+- Core SDK scaffold.
+- Primer adaptador: `CoreKeeper.LSG.Mod`.
+- Login, cache de mecánicas, canje.
 
 ---
 
