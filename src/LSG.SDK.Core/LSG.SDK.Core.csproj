@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <!-- netstandard2.1 por compatibilidad con Mono/Unity (BepInEx, SMAPI, tModLoader corren sobre Mono/.NET Framework moddeado) -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>LSG.SDK.Core</RootNamespace>
+    <AssemblyName>LSG.SDK.Core</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>SDK-core reutilizable para integrar mods de videojuegos con LSG-Auth y LSG-Core-API. Cluster inicial: BEPINEX (Core Keeper, Valheim, Subnautica, VRising).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
+
+</Project>

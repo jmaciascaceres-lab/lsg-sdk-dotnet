@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>CoreKeeper.LSG.Mod</RootNamespace>
+    <AssemblyName>CoreKeeper.LSG.Mod</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>Adaptador LSG para Core Keeper sobre BepInEx/Harmony. Cluster: BEPINEX.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Referencia local durante desarrollo. Migrar a PackageReference (NuGet privado/GitHub
+         Packages) cuando LSG.SDK.Core tenga su primer tag estable (ej. v0.1.0), para que
+         este adaptador pueda fijar versión sin arrastrar cambios en curso de otros adaptadores. -->
+    <ProjectReference Include="..\..\src\LSG.SDK.Core\LSG.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BepInEx y HarmonyX se resuelven vía referencias a los ensamblados del juego
+         (BepInEx.Core, 0Harmony) provistos por el propio Core Keeper/BepInEx instalado
+         en el entorno de build, no vía NuGet público. Ver README de este adaptador. -->
+  </ItemGroup>
+
+</Project>
