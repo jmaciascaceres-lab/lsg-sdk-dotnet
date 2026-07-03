@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using LSG.SDK.Core.Models;
 
 namespace LSG.SDK.Core.Mechanics
@@ -9,16 +11,16 @@ namespace LSG.SDK.Core.Mechanics
     /// </summary>
     public sealed class EffectContext
     {
-        public int PlayerId { get; init; }
+        public int PlayerId { get; set; }
 
         /// <summary>Identificador libre de dificultad/modo, si el juego lo expone
         /// (ej. "hardcore", "creative", "world_speed_2x"). No estandarizado a
         /// propósito: cada adaptador define su propio vocabulario.</summary>
-        public string? DifficultyTag { get; init; }
+        public string? DifficultyTag { get; set; }
 
         /// <summary>Bag libre para contexto adicional específico del adaptador,
         /// sin forzar cambios en EffectContext cada vez que un juego necesita algo distinto.</summary>
-        public IReadOnlyDictionary<string, object>? Extra { get; init; }
+        public IReadOnlyDictionary<string, object>? Extra { get; set; }
     }
 
     /// <summary>

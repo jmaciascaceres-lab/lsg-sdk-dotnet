@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <!-- netstandard2.1 por compatibilidad con Mono/Unity (BepInEx, SMAPI, tModLoader corren sobre Mono/.NET Framework moddeado) -->
-    <LangVersion>latest</LangVersion>
+    <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
     <RootNamespace>LSG.SDK.Core</RootNamespace>
     <AssemblyName>LSG.SDK.Core</AssemblyName>

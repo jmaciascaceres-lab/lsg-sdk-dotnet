@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Collections.Concurrent;
 using LSG.SDK.Core.Models;
 
@@ -5,9 +8,9 @@ namespace LSG.SDK.Core.Mechanics
 {
     public sealed class TimedEffect
     {
-        public required int PlayerId { get; init; }
-        public required MechanicDto Mechanic { get; init; }
-        public required DateTimeOffset ExpiresAt { get; init; }
+        public int PlayerId { get; set; }
+        public MechanicDto Mechanic { get; set; }
+        public DateTimeOffset ExpiresAt { get; set; }
 
         /// <summary>Estado necesario para revertir el efecto (ej. valor original antes
         /// del buff). Lo llena el adaptador en IEffectInterpreter.Apply() y lo recibe

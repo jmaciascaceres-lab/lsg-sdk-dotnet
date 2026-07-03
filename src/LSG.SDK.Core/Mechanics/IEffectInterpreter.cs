@@ -29,13 +29,19 @@ namespace LSG.SDK.Core.Mechanics
 
     public sealed class EffectApplicationResult
     {
-        public bool Success { get; init; }
-        public string? Warning { get; init; }
+        public bool Success { get; set; }
+        public string? Warning { get; set; }
 
-        public static EffectApplicationResult Ok() => new() { Success = true };
+        /// <summary>Estado necesario para revertir el efecto al expirar (ej. valor
+        /// original de paddleForce antes del multiplicador). Lo transporta
+        /// TimedEffectTracker sin interpretarlo — ver TimedEffect.RevertState.</summary>
+        public object? RevertState { get; set; }
 
-        public static EffectApplicationResult OkWithWarning(string warning) =>
-            new() { Success = true, Warning = warning };
+        public static EffectApplicationResult Ok(object? revertState = null) =>
+            new() { Success = true, RevertState = revertState };
+
+        public static EffectApplicationResult OkWithWarning(string warning, object? revertState = null) =>
+            new() { Success = true, Warning = warning, RevertState = revertState };
 
         public static EffectApplicationResult Failed(string reason) =>
             new() { Success = false, Warning = reason };
