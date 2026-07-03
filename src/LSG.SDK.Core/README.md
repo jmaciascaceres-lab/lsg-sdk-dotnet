@@ -1,8 +1,9 @@
-# LifeSync-Games (LSG) SDK Core
+# LSG.SDK.Core
 
-### Version: v0.2.1 (2026-07-03)
-
-SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
+SDK-core reutilizable para conectar mods de videojuegos con el ecosistema
+LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster
+BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en
+cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
 ## Principio de diseño
 
@@ -14,7 +15,11 @@ Este SDK **no conoce nada del juego**. Solo resuelve:
 4. Canje (`redeem/preview` + `redeem`)
 5. Cola offline (`POST /offline/sync`)
 
-La traducción de una mecánica (`buff`, `modifier`, ...) a la mecánica real del juego (Harmony patch, evento SMAPI, etc.) la implementa **cada adaptador de juego** vía `IEffectInterpreter`. Esto es lo que permite mantener cada mod de forma independiente, con distintos ciclos de release, sin tocar este SDK.
+La traducción de una mecánica (`buff`, `modifier`, ...) a la mecánica real
+del juego (Harmony patch, evento SMAPI, etc.) la implementa **cada
+adaptador de juego** vía `IEffectInterpreter`. Esto es lo que permite
+mantener cada mod de forma independiente, con distintos ciclos de release,
+sin tocar este SDK.
 
 ```
 LSG.SDK.Core (este repo)
@@ -33,7 +38,7 @@ Valheim.LSG.Mod (repo aparte)
   └── ValheimEffectInterpreter : IEffectInterpreter ...
 ```
 
-## Contrato de referencia - mecánicas mínimas cargadas
+## Contrato de referencia — mecánicas mínimas cargadas (2026-07-02)
 
 | Juego (id) | mmv_id | Nombre | Tipo | Dimensión objetivo |
 |---|---|---|---|---|
@@ -48,7 +53,12 @@ Valheim.LSG.Mod (repo aparte)
 | Raft (71) | 66 | Paddle Speed Boost | buff | FISICO_BASE |
 | Raft (71) | 67 | ~~Debris Scanner~~ → **Loot Luck Boost** (renombrado 2026-07-03: Debris Scanner no correspondía a ningún sistema real de Raft) | modifier | MENTAL_BASE |
 
-> **Nota de calidad de datos:** Subnautica (game_id=19) tiene 7 mecánicas legacy previas (mmv 35-43) con `options` placeholder (`{"additionalProp1": {}}`). `MechanicsCache` las detecta vía `HasPlaceholderOrEmptyOptions()` y dispara `OnPlaceholderOptionsDetected` para que el adaptador decida (loguear, ignorar, o excluir del HUD hasta que se limpien en el catálogo).
+> **Nota de calidad de datos:** Subnautica (game_id=19) tiene 7 mecánicas
+> legacy previas (mmv 35-43) con `options` placeholder
+> (`{"additionalProp1": {}}`). `MechanicsCache` las detecta vía
+> `HasPlaceholderOrEmptyOptions()` y dispara `OnPlaceholderOptionsDetected`
+> para que el adaptador decida (loguear, ignorar, o excluir del HUD hasta
+> que se limpien en el catálogo).
 
 ## Uso típico (pseudo-flujo de un adaptador)
 
@@ -60,7 +70,7 @@ var mechanics = new MechanicsCache(api);
 var offline = new OfflineQueue(api, config);
 
 mechanics.OnPlaceholderOptionsDetected += m =>
-    Log.Warn($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales - revisar catálogo.");
+    Log.Warn($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales — revisar catálogo.");
 
 // 1. Login (una vez, al iniciar el mod)
 var session = await auth.LoginAsync(playerEmail, playerPassword);
@@ -87,10 +97,13 @@ await offline.FlushAsync(playerId);
 
 ## Efectos con duración variable (`buff` con `duration_seconds`)
 
-La duración base viene del catálogo (`options.duration_seconds`), pero puede necesitar escalarse por juego/dificultad. Se resuelve con tres piezas desacopladas, todas en `Mechanics/`:
+La duración base viene del catálogo (`options.duration_seconds`), pero puede
+necesitar escalarse por juego/dificultad. Se resuelve con tres piezas
+desacopladas, todas en `Mechanics/`:
 
-- **`IGameClock`** - fuente de tiempo (default `SystemClock` = reloj real).
-- **`IDurationResolver`** - traduce duración base → duración efectiva. Default `PassthroughDurationResolver` no escala nada. Un adaptador que
+- **`IGameClock`** — fuente de tiempo (default `SystemClock` = reloj real).
+- **`IDurationResolver`** — traduce duración base → duración efectiva.
+  Default `PassthroughDurationResolver` no escala nada. Un adaptador que
   necesite ajustar por dificultad implementa su propio resolver:
 
   ```csharp
@@ -110,8 +123,12 @@ La duración base viene del catálogo (`options.duration_seconds`), pero puede n
   }
   ```
 
-- **`ITimedEffectTracker`** (`TimedEffectTracker`) - trackea expiración y dispara `OnExpired`. No sabe qué es un "buff" ni cómo revertirlo.
-- **`ITimedEffectInterpreter`** - extiende `IEffectInterpreter` con `Revert(TimedEffect)`. El adaptador, al aplicar un `buff`, guarda en `RevertState` lo necesario para deshacerlo (ej. valor original antes del multiplicador) y lo recibe de vuelta cuando el tracker dispara `OnExpired`.
+- **`ITimedEffectTracker`** (`TimedEffectTracker`) — trackea expiración y
+  dispara `OnExpired`. No sabe qué es un "buff" ni cómo revertirlo.
+- **`ITimedEffectInterpreter`** — extiende `IEffectInterpreter` con
+  `Revert(TimedEffect)`. El adaptador, al aplicar un `buff`, guarda en
+  `RevertState` lo necesario para deshacerlo (ej. valor original antes del
+  multiplicador) y lo recibe de vuelta cuando el tracker dispara `OnExpired`.
 
 ```csharp
 var duration = durationResolver.Resolve(mechanic, ctx);
@@ -131,21 +148,20 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 // tracker.Tick() llamado desde Update()/heartbeat del mod-loader.
 ```
 
-**Limitación conocida:** `TimedEffectTracker` es en memoria - si el proceso del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema real, la solución es persistir `TimedEffect` en un archivo local del adaptador y rehidratar el tracker en `Awake()`.
+**Limitación conocida:** `TimedEffectTracker` es en memoria — si el proceso
+del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin
+revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta
+el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema
+real, la solución es persistir `TimedEffect` en un archivo local del
+adaptador y rehidratar el tracker en `Awake()`.
 
 ## Pendientes conocidos (no bloqueantes para M1)
 
-- `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una iteración futura debe parsear el detalle por evento (`SYNCED` / `DUPLICATE` / `REJECTED`) y re-encolar solo los rechazados por causa transitoria.
-- `IEffectInterpreter` no define aún un mecanismo de rollback si `Apply()` falla después de un `redeem` exitoso (puntos ya debitados, efecto no aplicado). Decisión pendiente: ¿reintento local, o endpoint de compensación en el core? A discutir antes de M3.
-
-## Changelog
-
-### v0.2.1 (2026-07-03)
-
-- Se agrego `RaftEffectInterpreter` ya está escrito (`Paddle Speed Boost` vía Harmony patch sobre `Paddle.PaddlePaddle`, `Loot Luck Boost` como placeholder no-op). Build limpio, sin errores ni warnings. Pendiente: smoke test en juego real (ver troubleshooting de deploy arriba), luego login interactivo y conexión del flujo de `redeem`.
-
-## Referencias
-
-- R. González-Ibáñez, J. I. Macías-Cáceres and M. V. Paucar, "LifeSync-Games: A Technical Note on a Novel Framework for Video Game Development," 2025 44th International Conference of the Chilean Computer Science Society (SCCC), Valparaiso, Chile, 2025, pp. 1-4, doi: 10.1109/SCCC67219.2025.11420722.
-- González-Ibáñez R., Macías-Cáceres J., Villalta-Paucar M. (2025). LifeSync-Games: Toward a Video Game Paradigm for Promoting Responsible Gaming and Human Development. arXiv:2510.19691 [cs.HC]. DOI: https://arxiv.org/abs/2510.19691
-
+- `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una
+  iteración futura debe parsear el detalle por evento (`SYNCED` /
+  `DUPLICATE` / `REJECTED`) y re-encolar solo los rechazados por causa
+  transitoria.
+- `IEffectInterpreter` no define aún un mecanismo de rollback si `Apply()`
+  falla después de un `redeem` exitoso (puntos ya debitados, efecto no
+  aplicado). Decisión pendiente: ¿reintento local, o endpoint de
+  compensación en el core? A discutir antes de M3.

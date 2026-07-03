@@ -48,6 +48,10 @@
       <HintPath>$(RAFT_MANAGED_PATH)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(RAFT_MANAGED_PATH)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(BEPINEX_PATH)\core\0Harmony.dll</HintPath>
       <Private>false</Private>
