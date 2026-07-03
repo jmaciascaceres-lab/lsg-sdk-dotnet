@@ -1,6 +1,6 @@
 # LifeSync-Games (LSG) SDK Core
 
-### Version: v1.0.0 (2026-07-03)
+### Version: v1.1.0 (2026-07-03)
 
 SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
@@ -33,7 +33,7 @@ Valheim.LSG.Mod (repo aparte)
   └── ValheimEffectInterpreter : IEffectInterpreter ...
 ```
 
-## Contrato de referencia - mecánicas mínimas cargadas (2026-07-02)
+## Contrato de referencia - mecánicas mínimas cargadas
 
 | Juego (id) | mmv_id | Nombre | Tipo | Dimensión objetivo |
 |---|---|---|---|---|
@@ -137,3 +137,15 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 
 - `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una iteración futura debe parsear el detalle por evento (`SYNCED` / `DUPLICATE` / `REJECTED`) y re-encolar solo los rechazados por causa transitoria.
 - `IEffectInterpreter` no define aún un mecanismo de rollback si `Apply()` falla después de un `redeem` exitoso (puntos ya debitados, efecto no aplicado). Decisión pendiente: ¿reintento local, o endpoint de compensación en el core? A discutir antes de M3.
+
+## Changelog
+
+### v1.1.0 (2026-07-03)
+
+- Se agrego `RaftEffectInterpreter` ya está escrito (`Paddle Speed Boost` vía Harmony patch sobre `Paddle.PaddlePaddle`, `Loot Luck Boost` como placeholder no-op). Build limpio, sin errores ni warnings. Pendiente: smoke test en juego real (ver troubleshooting de deploy arriba), luego login interactivo y conexión del flujo de `redeem`.
+
+## Referencias
+
+- R. González-Ibáñez, J. I. Macías-Cáceres and M. V. Paucar, "LifeSync-Games: A Technical Note on a Novel Framework for Video Game Development," 2025 44th International Conference of the Chilean Computer Science Society (SCCC), Valparaiso, Chile, 2025, pp. 1-4, doi: 10.1109/SCCC67219.2025.11420722.
+- González-Ibáñez R., Macías-Cáceres J., Villalta-Paucar M. (2025). LifeSync-Games: Toward a Video Game Paradigm for Promoting Responsible Gaming and Human Development. arXiv:2510.19691 [cs.HC]. DOI: https://arxiv.org/abs/2510.19691
+

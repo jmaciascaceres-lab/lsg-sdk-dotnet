@@ -12,6 +12,14 @@
     <AssemblyName>Raft.LSG.Mod</AssemblyName>
     <Authors>LifeSync-Games</Authors>
     <Description>Adaptador LSG para Raft sobre BepInEx/Harmony. Cluster: BEPINEX. Reemplazo de Core Keeper (ver adapters/_archived/CoreKeeper.LSG.Mod/ARCHIVED.md).</Description>
+    <!-- CRÍTICO para deploy a BepInEx/plugins: sin esto, "dotnet build" solo copia
+         Raft.LSG.Mod.dll al output y deja fuera LSG.SDK.Core.dll (ProjectReference)
+         y System.Text.Json.dll + sus dependencias transitivas (PackageReference vía
+         LSG.SDK.Core). El resultado es exactamente el síntoma que vimos:
+         "The script 'RaftLsgMod.Plugin' could not be instantiated!" — Unity/Mono no
+         puede resolver los tipos base porque el ensamblado que los define no está
+         presente junto al plugin. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>

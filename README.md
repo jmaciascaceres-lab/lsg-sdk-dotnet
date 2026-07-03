@@ -1,10 +1,10 @@
 # LifeSync-Games (LSG) SDK DOTNET
 
-### Version: v1.0.0 (2026-07-03)
+### Version: v1.1.0 (2026-07-03)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 
-Ver decisión de topología multi-repo (por runtime, no por cluster técnico) en la conversación de diseño del `20260702` - resumen:
+Ver decisión de topología multi-repo (por runtime, no por cluster técnico):
 
 | Repo | Runtime | Clusters/juegos |
 |---|---|---|
@@ -41,3 +41,15 @@ Cada adaptador nuevo se agrega como `adapters/<Juego>.LSG.Mod/` y referencia `LS
 > Garry's Mod (reemplazo de Starbound) NO pertenece a este repo - es `LUA_SCRIPT`, corresponde a `lsg-sdk-lua` (repo aún no creado).
 
 Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargadas y el diseño de `IEffectInterpreter`.
+
+## Changelog
+
+### v1.1.0 (2026-07-03)
+
+- Se agrego `RaftEffectInterpreter` ya está escrito (`Paddle Speed Boost` vía Harmony patch sobre `Paddle.PaddlePaddle`, `Loot Luck Boost` como placeholder no-op). Build limpio, sin errores ni warnings. Pendiente: smoke test en juego real (ver troubleshooting de deploy arriba), luego login interactivo y conexión del flujo de `redeem`.
+
+## Referencias
+
+- R. González-Ibáñez, J. I. Macías-Cáceres and M. V. Paucar, "LifeSync-Games: A Technical Note on a Novel Framework for Video Game Development," 2025 44th International Conference of the Chilean Computer Science Society (SCCC), Valparaiso, Chile, 2025, pp. 1-4, doi: 10.1109/SCCC67219.2025.11420722.
+- González-Ibáñez R., Macías-Cáceres J., Villalta-Paucar M. (2025). LifeSync-Games: Toward a Video Game Paradigm for Promoting Responsible Gaming and Human Development. arXiv:2510.19691 [cs.HC]. DOI: https://arxiv.org/abs/2510.19691
+
