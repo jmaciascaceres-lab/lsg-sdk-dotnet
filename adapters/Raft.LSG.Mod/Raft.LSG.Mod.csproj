@@ -1,10 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Rutas locales de máquina: ver raft.local.props.example. Si "raft.local.props"
+       no existe, cae de vuelta a las variables de entorno RAFT_MANAGED_PATH/BEPINEX_PATH. -->
+  <Import Project="raft.local.props" Condition="Exists('raft.local.props')" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
-    <RootNamespace>Raft.LSG.Mod</RootNamespace>
+    <RootNamespace>RaftLsgMod</RootNamespace>
     <AssemblyName>Raft.LSG.Mod</AssemblyName>
     <Authors>LifeSync-Games</Authors>
     <Description>Adaptador LSG para Raft sobre BepInEx/Harmony. Cluster: BEPINEX. Reemplazo de Core Keeper (ver adapters/_archived/CoreKeeper.LSG.Mod/ARCHIVED.md).</Description>
@@ -26,6 +30,10 @@
          ruta absoluta de máquina de desarrollador en el repo). -->
     <Reference Include="Assembly-CSharp">
       <HintPath>$(RAFT_MANAGED_PATH)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(RAFT_MANAGED_PATH)\UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">

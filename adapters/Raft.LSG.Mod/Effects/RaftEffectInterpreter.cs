@@ -1,7 +1,7 @@
 using LSG.SDK.Core.Mechanics;
 using LSG.SDK.Core.Models;
 
-namespace Raft.LSG.Mod.Effects
+namespace RaftLsgMod.Effects
 {
     /// <summary>
     /// Traduce el catálogo de mecánicas de Raft (game_id=71) a efectos reales.

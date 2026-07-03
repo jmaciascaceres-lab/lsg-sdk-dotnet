@@ -18,15 +18,24 @@ Descarga: https://github.com/BepInEx/BepInEx/releases
 2. Ejecutar el juego una vez → genera `BepInEx/plugins/`, `BepInEx/config/`, `BepInEx/LogOutput.log`.
 3. Verificar en `LogOutput.log` que el Chainloader arrancó sin errores.
 
-## 2. Variables de entorno para compilar
+## 2. Configurar rutas locales (sin depender de variables de entorno de sesión)
 
-No se versionan rutas absolutas de máquina de desarrollador en el `.csproj`.
-Definir antes de compilar:
+`setx` solo aplica a terminales **nuevas** — si ya tenías PowerShell/VS Code
+abierto cuando lo corriste, esa sesión no lo ve, y es fácil perder tiempo
+pensando que el build está roto cuando en realidad falta reabrir la terminal.
+Para evitar ese problema (y que se repita con cada tesista/adaptador nuevo),
+usamos un archivo de propiedades local, no versionado:
 
 ```powershell
-setx RAFT_MANAGED_PATH "C:\Program Files (x86)\Steam\steamapps\common\Raft\Raft_Data\Managed"
-setx BEPINEX_PATH "C:\Program Files (x86)\Steam\steamapps\common\Raft\BepInEx"
+copy raft.local.props.example raft.local.props
+notepad raft.local.props   # editar con tus rutas reales
 ```
+
+`raft.local.props` está en `.gitignore` — cada quien mantiene sus propias
+rutas sin pisar las de otros ni depender del estado de la terminal. Si el
+archivo no existe, el `.csproj` cae de vuelta a las variables de entorno
+`RAFT_MANAGED_PATH`/`BEPINEX_PATH` (mecanismo anterior, sigue funcionando
+como fallback).
 
 ## 3. Pendiente antes de escribir `RaftEffectInterpreter`
 

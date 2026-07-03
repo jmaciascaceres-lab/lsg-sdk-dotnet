@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace Raft.LSG.Mod.Effects.Patches
+namespace RaftLsgMod.Effects.Patches
 {
     /// <summary>
     /// Intercepta Paddle.PaddlePaddle(Vector3, Vector3, float) para multiplicar la

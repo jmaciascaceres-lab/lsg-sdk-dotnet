@@ -1,0 +1,14 @@
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Raft.LSG.Mod.deps.json
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Raft.LSG.Mod.dll
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Raft.LSG.Mod.pdb
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\LSG.SDK.Core.dll
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\LSG.SDK.Core.pdb
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.csproj.AssemblyReference.cache
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.AssemblyInfoInputs.cache
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.AssemblyInfo.cs
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.csproj.CoreCompileInputs.cache
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.sourcelink.json
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.23E4984E.Up2Date
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.dll
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\adapters\Raft.LSG.Mod\obj\Release\netstandard2.1\Raft.LSG.Mod.pdb

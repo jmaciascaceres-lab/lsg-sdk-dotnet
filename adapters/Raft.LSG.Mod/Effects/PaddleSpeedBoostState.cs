@@ -1,6 +1,6 @@
 using System;
 
-namespace Raft.LSG.Mod.Effects
+namespace RaftLsgMod.Effects
 {
     /// <summary>
     /// Estado del buff activo de Paddle Speed Boost (mmv=66). Los patches de Harmony

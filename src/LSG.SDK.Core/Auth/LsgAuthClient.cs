@@ -48,7 +48,7 @@ namespace LSG.SDK.Core.Auth
             using var response = await _http.PostAsync($"{_config.AuthBaseUrl}/login", content, ct);
             response.EnsureSuccessStatusCode();
 
-            var stream = await response.Content.ReadAsStreamAsync(ct);
+            var stream = await response.Content.ReadAsStreamAsync();
             var login = await JsonSerializer.DeserializeAsync<LoginResponse>(stream, JsonOpts, ct)
                         ?? throw new InvalidOperationException("Respuesta de login vacía.");
 
@@ -102,7 +102,7 @@ namespace LSG.SDK.Core.Auth
                     $"No se pudo refrescar el token (HTTP {(int)response.StatusCode}). Se requiere nuevo login.");
             }
 
-            var stream = await response.Content.ReadAsStreamAsync(ct);
+            var stream = await response.Content.ReadAsStreamAsync();
             var refreshed = await JsonSerializer.DeserializeAsync<LoginResponse>(stream, JsonOpts, ct)
                              ?? throw new InvalidOperationException("Respuesta de refresh vacía.");
 

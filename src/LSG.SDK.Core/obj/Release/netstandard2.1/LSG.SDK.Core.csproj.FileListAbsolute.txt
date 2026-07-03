@@ -1,6 +1,11 @@
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\bin\Release\netstandard2.1\LSG.SDK.Core.deps.json
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\bin\Release\netstandard2.1\LSG.SDK.Core.dll
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\bin\Release\netstandard2.1\LSG.SDK.Core.pdb
 C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.csproj.AssemblyReference.cache
 C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.AssemblyInfoInputs.cache
 C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.AssemblyInfo.cs
 C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.csproj.CoreCompileInputs.cache
 C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.sourcelink.json
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.dll
+C:\Users\joaqu\OneDrive\Documentos\GitHub\lsg-sdk-dotnet\src\LSG.SDK.Core\obj\Release\netstandard2.1\LSG.SDK.Core.pdb

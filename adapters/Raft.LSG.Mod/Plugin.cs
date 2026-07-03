@@ -5,9 +5,9 @@ using LSG.SDK.Core.Auth;
 using LSG.SDK.Core.Config;
 using LSG.SDK.Core.Mechanics;
 using LSG.SDK.Core.Offline;
-using Raft.LSG.Mod.Effects;
+using RaftLsgMod.Effects;
 
-namespace Raft.LSG.Mod
+namespace RaftLsgMod
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     public sealed class Plugin : BaseUnityPlugin

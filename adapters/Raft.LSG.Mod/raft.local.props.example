@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    Copia este archivo como "raft.local.props" (sin ".example") en esta misma carpeta
+    y completa las rutas reales de TU máquina. "raft.local.props" está en .gitignore
+    — no se sube al repo, así que cada tesista mantiene sus propias rutas sin pisar
+    las de los demás ni depender de que la variable de entorno sobreviva a un reinicio
+    de terminal (setx solo afecta sesiones NUEVAS, no la que ya tenías abierta).
+
+    Si este archivo no existe, el .csproj cae de vuelta a las variables de entorno
+    RAFT_MANAGED_PATH / BEPINEX_PATH (comportamiento anterior, sigue funcionando).
+  -->
+  <PropertyGroup>
+    <RAFT_MANAGED_PATH>C:\Program Files (x86)\Steam\steamapps\common\Raft\Raft_Data\Managed</RAFT_MANAGED_PATH>
+    <BEPINEX_PATH>C:\Program Files (x86)\Steam\steamapps\common\Raft\BepInEx</BEPINEX_PATH>
+  </PropertyGroup>
+</Project>

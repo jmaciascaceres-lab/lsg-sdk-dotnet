@@ -9,7 +9,7 @@ namespace LSG.SDK.Core.Mechanics
     public sealed class TimedEffect
     {
         public int PlayerId { get; set; }
-        public MechanicDto Mechanic { get; set; }
+        public MechanicDto Mechanic { get; set; } = null!;
         public DateTimeOffset ExpiresAt { get; set; }
 
         /// <summary>Estado necesario para revertir el efecto (ej. valor original antes
