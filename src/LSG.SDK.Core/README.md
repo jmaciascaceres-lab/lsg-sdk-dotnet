@@ -1,6 +1,6 @@
 # LifeSync-Games (LSG) SDK Core
 
-### Version: v1.1.0 (2026-07-03)
+### Version: v0.2.1 (2026-07-03)
 
 SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
@@ -140,7 +140,7 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 
 ## Changelog
 
-### v1.1.0 (2026-07-03)
+### v0.2.1 (2026-07-03)
 
 - Se agrego `RaftEffectInterpreter` ya está escrito (`Paddle Speed Boost` vía Harmony patch sobre `Paddle.PaddlePaddle`, `Loot Luck Boost` como placeholder no-op). Build limpio, sin errores ni warnings. Pendiente: smoke test en juego real (ver troubleshooting de deploy arriba), luego login interactivo y conexión del flujo de `redeem`.
 

@@ -1,6 +1,6 @@
 # LifeSync-Games (LSG) SDK DOTNET
 
-### Version: v1.1.0 (2026-07-03)
+### Version: v0.2.1 (2026-07-03)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 
@@ -44,7 +44,7 @@ Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargada
 
 ## Changelog
 
-### v1.1.0 (2026-07-03)
+### v0.2.1 (2026-07-03)
 
 - Se agrego `RaftEffectInterpreter` ya está escrito (`Paddle Speed Boost` vía Harmony patch sobre `Paddle.PaddlePaddle`, `Loot Luck Boost` como placeholder no-op). Build limpio, sin errores ni warnings. Pendiente: smoke test en juego real (ver troubleshooting de deploy arriba), luego login interactivo y conexión del flujo de `redeem`.
 

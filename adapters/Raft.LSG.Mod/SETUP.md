@@ -1,6 +1,6 @@
 # Setup - Raft.LSG.Mod
 
-### Version: v1.1.0 (2026-07-03)
+### Version: v0.2.1 (2026-07-03)
 
 - Runtime: **Mono / .NET Framework clásico** (no IL2CPP). Verificado abriendo `Assembly-CSharp.dll` directo en dnSpy sin necesidad de unhollowing.
 - Ruta de referencia en la máquina de desarrollo (ejemplo): `C:\Program Files (x86)\Steam\steamapps\common\Raft\Raft_Data\Managed\`
@@ -42,7 +42,7 @@ El `.csproj` tiene `CopyLocalLockFileAssemblies=true`, así que el build ya deja
 
 ## 5. Changelog
 
-### v1.1.0 (2026-07-03)
+### v0.2.1 (2026-07-03)
 
 - Se agrego `RaftEffectInterpreter` ya está escrito (`Paddle Speed Boost` vía Harmony patch sobre `Paddle.PaddlePaddle`, `Loot Luck Boost` como placeholder no-op). Build limpio, sin errores ni warnings. Pendiente: smoke test en juego real (ver troubleshooting de deploy arriba), luego login interactivo y conexión del flujo de `redeem`.
 
