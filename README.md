@@ -1,6 +1,6 @@
 # LifeSync-Games (LSG) SDK DOTNET
 
-### Version: v0.3.1-prerelease (2026-07-03)
+### Version: v1.0.0 (2026-07-03)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 

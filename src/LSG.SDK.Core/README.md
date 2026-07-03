@@ -1,6 +1,6 @@
 # LifeSync-Games (LSG) SDK Core
 
-### Version: v0.3.1-prerelease (2026-07-03)
+### Version: v1.0.0 (2026-07-03)
 
 SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
