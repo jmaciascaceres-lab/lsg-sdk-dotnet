@@ -37,7 +37,7 @@ namespace RaftLsgMod.Effects.Patches
     {
         private static void Prefix(Paddle __instance, ref float force)
         {
-            if (!PaddleSpeedBoostState.IsCurrentlyActive())
+            if (!PaddleSpeedBoostState.IsActive)
                 return;
 
             var playerNetwork = Traverse.Create(__instance).Field("playerNetwork").GetValue<Network_Player>();
