@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyDescriptionAttribute(("SDK-core reutilizable para integrar mods de videojuegos con LSG-Auth y LSG-Core-A" +
     "PI. Cluster inicial: BEPINEX (Core Keeper, Valheim, Subnautica, VRising)."))]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+295d2a0045a283b23104166119884cbc3f846932")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+341889c7ba02382f6688273df5d8763b5fd9a451")]
 [assembly: System.Reflection.AssemblyProductAttribute("LSG.SDK.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LSG.SDK.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

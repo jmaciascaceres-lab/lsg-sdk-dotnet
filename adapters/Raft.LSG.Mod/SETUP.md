@@ -37,23 +37,31 @@ archivo no existe, el `.csproj` cae de vuelta a las variables de entorno
 `RAFT_MANAGED_PATH`/`BEPINEX_PATH` (mecanismo anterior, sigue funcionando
 como fallback).
 
-## 4. Deploy — copiar TODA la carpeta de output, no un solo .dll
+## 4. Deploy — un solo .dll (ILRepack fusiona todo automáticamente)
 
-`Raft.LSG.Mod.dll` depende de `LSG.SDK.Core.dll` (ProjectReference) y de
-`System.Text.Json.dll` + sus dependencias transitivas (PackageReference).
-Copiar solo `Raft.LSG.Mod.dll` produce exactamente el síntoma
-`"The script 'RaftLsgMod.Plugin' could not be instantiated!"` en el log de
-Unity — el CLR no puede resolver los tipos base porque el ensamblado que
-los define no está presente.
+**Actualizado 2026-07-03:** se detectó un conflicto real en juego — Raft ya
+carga su propia copia de `System.Text.Json.dll` (vía PlayFab SDK) desde
+`Raft_Data/Managed/`, y Mono la resuelve antes que la nuestra en
+`BepInEx/plugins/`, causando `MissingMethodException` en tiempo de
+ejecución aunque el build compile perfecto. El `.csproj` ahora usa
+**ILRepack** para fusionar `LSG.SDK.Core.dll` + `System.Text.Json.dll` (+
+dependencias) **dentro** de `Raft.LSG.Mod.dll` con `/internalize`, así
+nuestro código siempre usa su propia copia embebida sin depender del orden
+de resolución de ensamblados del AppDomain.
 
 ```powershell
 dotnet build adapters\Raft.LSG.Mod\Raft.LSG.Mod.csproj -c Release
-xcopy /Y adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\*.dll "<ruta_raft>\BepInEx\plugins\"
+copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Raft.LSG.Mod.merged.dll "<ruta_raft>\BepInEx\plugins\"
 ```
 
-El `.csproj` tiene `CopyLocalLockFileAssemblies=true`, así que el build ya
-deja todos los `.dll` necesarios (incluido `LSG.SDK.Core.dll`) en esa misma
-carpeta de output — el `xcopy` de arriba los copia todos de una vez.
+**Importante:** copiar `Raft.LSG.Mod.merged.dll` (el fusionado), **no**
+`Raft.LSG.Mod.dll` (el original sin fusionar, que sigue generándose en la
+misma carpeta pero depende de `LSG.SDK.Core.dll` por separado). Si ambos
+terminan en `plugins/`, BepInEx probablemente falle por GUID de plugin
+duplicado (`cl.usach.diinf.lsg.raft` definido dos veces) o por conflicto de
+tipos. El nombre del archivo no importa para BepInEx — escanea cualquier
+`.dll` en `plugins/` buscando `[BepInPlugin]`, no exige que coincida con el
+nombre del ensamblado.
 
 ## 5. Estado actual (v0.3.0)
 

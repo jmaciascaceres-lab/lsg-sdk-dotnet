@@ -2,6 +2,12 @@
   "version": 3,
   "targets": {
     ".NETStandard,Version=v2.1": {
+      "ILRepack.Lib.MSBuild.Task/2.0.34": {
+        "type": "package",
+        "build": {
+          "build/ILRepack.Lib.MSBuild.Task.targets": {}
+        }
+      },
       "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
         "type": "package",
         "compile": {
@@ -146,6 +152,19 @@
     }
   },
   "libraries": {
+    "ILRepack.Lib.MSBuild.Task/2.0.34": {
+      "sha512": "L8TGuOMXjjT9tHf55bruPBBxJ9y17dLTf27cxPox6hhbdxFNNe7nwKzgYw6r/DZOH8O5qRxKpLeW/y80Gz45cg==",
+      "type": "package",
+      "path": "ilrepack.lib.msbuild.task/2.0.34",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/ILRepack.Lib.MSBuild.Task.dll",
+        "build/ILRepack.Lib.MSBuild.Task.targets",
+        "ilrepack.lib.msbuild.task.2.0.34.nupkg.sha512",
+        "ilrepack.lib.msbuild.task.nuspec"
+      ]
+    },
     "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
       "sha512": "3WA9q9yVqJp222P3x1wYIGDAkpjAku0TMUaaQV22g6L67AI0LdOIrVS7Ht2vJfLHGSPVuqN94vIr15qn+HEkHw==",
       "type": "package",
@@ -445,6 +464,7 @@
   },
   "projectFileDependencyGroups": {
     ".NETStandard,Version=v2.1": [
+      "ILRepack.Lib.MSBuild.Task >= 2.0.34",
       "LSG.SDK.Core >= 1.0.0"
     ]
   },
@@ -501,6 +521,12 @@
     "frameworks": {
       "netstandard2.1": {
         "targetAlias": "netstandard2.1",
+        "dependencies": {
+          "ILRepack.Lib.MSBuild.Task": {
+            "target": "Package",
+            "version": "[2.0.34, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",
