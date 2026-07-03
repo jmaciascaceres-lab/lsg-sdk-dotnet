@@ -1,7 +1,8 @@
-# LSG.SDK.Core
+# LifeSync Games SDK CORE
 
-SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster
-BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
+## Version: 0.2.0-prerelease (2026-07-03)
+
+SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster BEPINEX** (Core Keeper, Raft, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
 ## Principio de diseño
 
@@ -13,17 +14,15 @@ Este SDK **no conoce nada del juego**. Solo resuelve:
 4. Canje (`redeem/preview` + `redeem`)
 5. Cola offline (`POST /offline/sync`)
 
-La traducción de una mecánica (`buff`, `modifier`, ...) a la mecánica real del juego (Harmony patch, evento SMAPI, etc.) la implementa **cada
-adaptador de juego** vía `IEffectInterpreter`. Esto es lo que permite mantener cada mod de forma independiente, con distintos ciclos de release,
-sin tocar este SDK.
+La traducción de una mecánica (`buff`, `modifier`, ...) a la mecánica real del juego (Harmony patch, evento SMAPI, etc.) la implementa **cada adaptador de juego** vía `IEffectInterpreter`. Esto es lo que permite mantener cada mod de forma independiente, con distintos ciclos de release, sin tocar este SDK.
 
 ```
 LSG.SDK.Core (este repo)
-  ├── Auth        → LsgAuthClient
-  ├── Api         → LsgCoreApiClient
-  ├── Mechanics   → MechanicsCache, IEffectInterpreter
-  ├── Offline     → OfflineQueue
-  └── Models      → DTOs
+  ├── Auth → LsgAuthClient
+  ├── Api → LsgCoreApiClient
+  ├── Mechanics → MechanicsCache, IEffectInterpreter
+  ├── Offline → OfflineQueue
+  └── Models → DTOs
 
 CoreKeeper.LSG.Mod (repo aparte, referencia este SDK)
   └── CoreKeeperEffectInterpreter : IEffectInterpreter
@@ -34,7 +33,7 @@ Valheim.LSG.Mod (repo aparte)
   └── ValheimEffectInterpreter : IEffectInterpreter ...
 ```
 
-## Contrato de referencia — mecánicas mínimas cargadas
+## Contrato de referencia - mecánicas mínimas cargadas
 
 | Juego (id) | mmv_id | Nombre | Tipo | Dimensión objetivo |
 |---|---|---|---|---|
@@ -46,13 +45,10 @@ Valheim.LSG.Mod (repo aparte)
 | Subnautica (19) | 63 | Scanner Radius Boost | modifier | MENTAL_BASE |
 | VRising (58) | 64 | Movement Speed Boost | buff | FISICO_BASE |
 | VRising (58) | 65 | Blood Quality Insight | modifier | MENTAL_BASE |
+| Raft (71) | 66 | Paddle Speed Boost | buff | FISICO_BASE |
+| Raft (71) | 67 | Debris Scanner | modifier | MENTAL_BASE |
 
-> **Nota de calidad de datos:** Subnautica (game_id=19) tiene 7 mecánicas
-> legacy previas (mmv 35-43) con `options` placeholder
-> (`{"additionalProp1": {}}`). `MechanicsCache` las detecta vía
-> `HasPlaceholderOrEmptyOptions()` y dispara `OnPlaceholderOptionsDetected`
-> para que el adaptador decida (loguear, ignorar, o excluir del HUD hasta
-> que se limpien en el catálogo).
+> **Nota de calidad de datos:** Subnautica (game_id=19) tiene 7 mecánicas legacy previas (mmv 35-43) con `options` placeholder (e.g. `{"additionalProp1": {}}`). `MechanicsCache` las detecta vía `HasPlaceholderOrEmptyOptions()` y dispara `OnPlaceholderOptionsDetected` para que el adaptador decida (loguear, ignorar, o excluir del HUD hasta que se limpien en el catálogo).
 
 ## Uso típico (pseudo-flujo de un adaptador)
 
@@ -64,7 +60,7 @@ var mechanics = new MechanicsCache(api);
 var offline = new OfflineQueue(api, config);
 
 mechanics.OnPlaceholderOptionsDetected += m =>
-    Log.Warn($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales — revisar catálogo.");
+    Log.Warn($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales - revisar catálogo.");
 
 // 1. Login (una vez, al iniciar el mod)
 var session = await auth.LoginAsync(playerEmail, playerPassword);
@@ -91,14 +87,11 @@ await offline.FlushAsync(playerId);
 
 ## Efectos con duración variable (`buff` con `duration_seconds`)
 
-La duración base viene del catálogo (`options.duration_seconds`), pero puede
-necesitar escalarse por juego/dificultad. Se resuelve con tres piezas
+La duración base viene del catálogo (`options.duration_seconds`), pero puede necesitar escalarse por juego/dificultad. Se resuelve con tres piezas
 desacopladas, todas en `Mechanics/`:
 
-- **`IGameClock`** — fuente de tiempo (default `SystemClock` = reloj real).
-- **`IDurationResolver`** — traduce duración base → duración efectiva.
-  Default `PassthroughDurationResolver` no escala nada. Un adaptador que
-  necesite ajustar por dificultad implementa su propio resolver:
+- **`IGameClock`** - fuente de tiempo (default `SystemClock` = reloj real).
+- **`IDurationResolver`** - traduce duración base → duración efectiva. Default `PassthroughDurationResolver` no escala nada. Un adaptador que necesite ajustar por dificultad implementa su propio resolver:
 
   ```csharp
   public sealed class CoreKeeperDurationResolver : IDurationResolver
@@ -117,12 +110,8 @@ desacopladas, todas en `Mechanics/`:
   }
   ```
 
-- **`ITimedEffectTracker`** (`TimedEffectTracker`) — trackea expiración y
-  dispara `OnExpired`. No sabe qué es un "buff" ni cómo revertirlo.
-- **`ITimedEffectInterpreter`** — extiende `IEffectInterpreter` con
-  `Revert(TimedEffect)`. El adaptador, al aplicar un `buff`, guarda en
-  `RevertState` lo necesario para deshacerlo (ej. valor original antes del
-  multiplicador) y lo recibe de vuelta cuando el tracker dispara `OnExpired`.
+- **`ITimedEffectTracker`** (`TimedEffectTracker`) - trackea expiración y dispara `OnExpired`. No sabe qué es un "buff" ni cómo revertirlo.
+- **`ITimedEffectInterpreter`** - extiende `IEffectInterpreter` con `Revert(TimedEffect)`. El adaptador, al aplicar un `buff`, guarda en `RevertState` lo necesario para deshacerlo (ej. valor original antes del multiplicador) y lo recibe de vuelta cuando el tracker dispara `OnExpired`.
 
 ```csharp
 var duration = durationResolver.Resolve(mechanic, ctx);
@@ -142,8 +131,7 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 // tracker.Tick() llamado desde Update()/heartbeat del mod-loader.
 ```
 
-**Limitación conocida:** `TimedEffectTracker` es en memoria — si el proceso del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema
-real, la solución es persistir `TimedEffect` en un archivo local del adaptador y rehidratar el tracker en `Awake()`.
+**Limitación conocida:** `TimedEffectTracker` es en memoria - si el proceso del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema real, la solución es persistir `TimedEffect` en un archivo local del adaptador y rehidratar el tracker en `Awake()`.
 
 ## Pendientes conocidos (no bloqueantes para M1)
 

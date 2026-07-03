@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Raft.LSG.Mod</RootNamespace>
+    <AssemblyName>Raft.LSG.Mod</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>Adaptador LSG para Raft sobre BepInEx/Harmony. Cluster: BEPINEX. Reemplazo de Core Keeper (ver adapters/_archived/CoreKeeper.LSG.Mod/ARCHIVED.md).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LSG.SDK.Core\LSG.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CONFIRMADO 2026-07-02 (dnSpy sobre Assembly-CSharp.dll): Raft corre en
+         Mono/.NET Framework clásico, NO IL2CPP. BepInEx a usar: rama 5.4.x
+         (Mono x64), NO la 6.0.0 Bleeding Edge que requiere Core Keeper.
+         Ver SETUP.md en esta misma carpeta para instrucciones de instalación.
+
+         Referencias resueltas contra la carpeta local de instalación del juego.
+         Definir la variable de entorno RAFT_MANAGED_PATH apuntando a
+         "...\Raft\Raft_Data\Managed" antes de compilar (no se versiona una
+         ruta absoluta de máquina de desarrollador en el repo). -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(RAFT_MANAGED_PATH)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(RAFT_MANAGED_PATH)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BEPINEX_PATH)\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(BEPINEX_PATH)\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
