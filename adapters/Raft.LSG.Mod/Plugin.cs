@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Configuration;
@@ -19,7 +20,7 @@ namespace RaftLsgMod
     {
         private const string PluginGuid = "cl.usach.diinf.lsg.raft";
         private const string PluginName = "LSG Raft Adapter";
-        private const string PluginVersion = "0.3.0";
+        private const string PluginVersion = "0.3.3";
 
         // Confirmado: id_videogame = 71 (db_lsg.videogame, 2026-07-02).
         private const int LsgGameId = 71;
@@ -111,9 +112,12 @@ namespace RaftLsgMod
 
                 await _mechanics.RefreshAsync();
                 Logger.LogInfo($"Catálogo de mecánicas cargado: {_mechanics.All.Count} mecánica(s) para game_id={LsgGameId}.");
-
-                // Flush periódico de la cola offline, una vez que hay player_id.
-                InvokeRepeating(nameof(FlushOfflineQueueTick), _config.OfflineFlushIntervalSeconds, _config.OfflineFlushIntervalSeconds);
+                // El flush periódico de la cola offline se maneja en Update() (ver
+                // _offlineFlushTimer) — NO usar InvokeRepeating aquí: es una API de
+                // Unity que exige ejecutarse en el hilo principal, y tras dos await
+                // (LoginAsync, RefreshAsync) esta continuación corre en un hilo del
+                // thread-pool sin SynchronizationContext de Unity, lo que produce
+                // NullReferenceException en la llamada nativa (visto 2026-07-04).
             }
             catch (Exception ex)
             {
@@ -121,20 +125,71 @@ namespace RaftLsgMod
             }
         }
 
+        private void OnEnable()
+        {
+            Logger.LogInfo("OnEnable() llamado — el componente está activo en la escena.");
+        }
+
+        private void Start()
+        {
+            Logger.LogInfo("Start() llamado.");
+            StartCoroutine(HeartbeatCoroutine());
+        }
+
+        private IEnumerator HeartbeatCoroutine()
+        {
+            yield return new WaitForSeconds(1f);
+            Logger.LogInfo("Coroutine heartbeat (1s tras Start) — independiente de Update().");
+        }
+
+        private float _offlineFlushTimer;
+        private bool _updateHeartbeatLogged;
+
         private void Update()
         {
-            _timedEffects.Tick();
-
-            if (_playerId.HasValue && !_isRedeemInFlight && Input.GetKeyDown(_testRedeemKey.Value))
+            try
             {
-                _ = TestRedeemPaddleSpeedBoostAsync(_playerId.Value);
+                if (!_updateHeartbeatLogged)
+                {
+                    _updateHeartbeatLogged = true;
+                    Logger.LogInfo("Update() ejecutándose (heartbeat) — playerId=" + (_playerId?.ToString() ?? "null"));
+                }
+
+                _timedEffects.Tick();
+
+                if (Input.GetKeyDown(_testRedeemKey.Value))
+                {
+                    Logger.LogInfo($"Tecla de prueba ({_testRedeemKey.Value}) detectada. playerId={_playerId}, redeemInFlight={_isRedeemInFlight}");
+
+                    if (_playerId.HasValue && !_isRedeemInFlight)
+                    {
+                        _ = TestRedeemPaddleSpeedBoostAsync(_playerId.Value);
+                    }
+                }
+
+                if (_playerId.HasValue)
+                {
+                    _offlineFlushTimer += Time.deltaTime;
+                    if (_offlineFlushTimer >= _config.OfflineFlushIntervalSeconds)
+                    {
+                        _offlineFlushTimer = 0f;
+                        FlushOfflineQueueTick();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Capturado explícitamente: si UnityEngine.Input lanza porque el juego
+                // usa el nuevo Input System exclusivamente (Active Input Handling),
+                // esta excepción quedaría silenciada por Unity/BepInEx sin este catch.
+                Logger.LogError($"Excepción en Update(): {ex}");
             }
         }
 
         /// <summary>
-        /// Invocado por InvokeRepeating (API de Unity, no requiere coroutines).
-        /// No puede ser async void directamente por buenas prácticas, así que delega
-        /// a un Task fire-and-forget con manejo de excepciones.
+        /// Invocado desde Update() (hilo principal, seguro). Delega a un Task
+        /// fire-and-forget con manejo de excepciones — no puede ser async void
+        /// directamente por buenas prácticas.
         /// </summary>
         private void FlushOfflineQueueTick()
         {

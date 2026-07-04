@@ -155,6 +155,18 @@ el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema
 real, la solución es persistir `TimedEffect` en un archivo local del
 adaptador y rehidratar el tracker en `Awake()`.
 
+## Nota de compatibilidad con Mono viejo (2026-07-03)
+
+`JsonSerializer.DeserializeAsync<T>(Stream, ...)` (la variante async basada
+en `ValueTask`) produce `InvalidProgramException: Invalid IL code` en el
+Mono de BepInEx 5.4.x (CLR 4.0.30319, era .NET Framework 4.x) — **no es un
+problema de ILRepack ni de conflicto de ensamblados**, es una
+incompatibilidad real de esa API async en runtimes tan viejos. Todo el
+SDK-core lee el body HTTP completo como `string` (`ReadAsStringAsync()`,
+`Task` plano) y deserializa con la versión **síncrona**
+`JsonSerializer.Deserialize<T>(string)`. Si se agrega un nuevo método al
+cliente HTTP, seguir este mismo patrón — no reintroducir la variante Stream/async.
+
 ## Pendientes conocidos (no bloqueantes para M1)
 
 - `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una

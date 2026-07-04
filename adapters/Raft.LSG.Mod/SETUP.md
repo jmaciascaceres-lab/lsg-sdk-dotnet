@@ -63,6 +63,47 @@ tipos. El nombre del archivo no importa para BepInEx — escanea cualquier
 `.dll` en `plugins/` buscando `[BepInPlugin]`, no exige que coincida con el
 nombre del ensamblado.
 
+### 4.1. Corrección: doble ejecución de ILRepack (2026-07-03)
+
+`ILRepack.Lib.MSBuild.Task` ejecuta su **propio** target automático
+(`AfterTargets="Build"`) que fusiona todos los `.dll` de la carpeta de
+salida por defecto, **salvo** que exista un archivo llamado exactamente
+`ILRepack.targets` en la carpeta del proyecto — en ese caso usa ESE en vez
+del suyo. Al tener nuestra lógica como un target inline dentro del
+`.csproj`, ambos corrían en la misma build: el nuestro generaba
+`Raft.LSG.Mod.merged.dll` correctamente, y luego el del paquete escaneaba
+la carpeta, encontraba el original *y* el fusionado, e intentaba
+fusionarlos entre sí → `Duplicate type RaftLsgMod.Plugin`.
+
+**Fix:** la lógica de merge vive ahora en `adapters/Raft.LSG.Mod/ILRepack.targets`
+(archivo aparte, mismo contenido de antes) — el `.csproj` solo mantiene el
+`<PackageReference>`. No se requiere ningún paso adicional del lado del
+desarrollador; el archivo ya está en el repo.
+
+### 4.2. Corrección: `Microsoft.Bcl.AsyncInterfaces` y `System.Threading.Tasks.Extensions` — ni fusionar, ni omitir (2026-07-04)
+
+`System.Text.Json` no tiene un asset específico para `netstandard2.1` — NuGet
+resuelve al asset compatible con `netstandard2.0`, que **sí depende
+genuinamente** de `Microsoft.Bcl.AsyncInterfaces.dll` y
+`System.Threading.Tasks.Extensions.dll` en tiempo de ejecución. Estos dos
+ensamblados están **deliberadamente excluidos** de la fusión de ILRepack
+(fusionarlos junto a `netstandard.dll`, que ya trae `IAsyncDisposable`/
+`ValueTask` nativos en netstandard2.1, generaba IL corrupto — ver nota en
+`ILRepack.targets`), pero **eso no significa que sobren**: sin ellos
+presentes en tiempo de ejecución, `JsonSerializer` falla con
+`TypeLoadException` al inicializar `JsonTypeInfo<T>` (visto 2026-07-04).
+
+**Deploy correcto — 3 archivos, no 1:**
+
+```powershell
+copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Raft.LSG.Mod.merged.dll "<ruta_raft>\BepInEx\plugins\"
+copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Microsoft.Bcl.AsyncInterfaces.dll "<ruta_raft>\BepInEx\plugins\"
+copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\System.Threading.Tasks.Extensions.dll "<ruta_raft>\BepInEx\plugins\"
+```
+
+No copiar `Raft.LSG.Mod.dll` (el original sin fusionar) ni el resto de los
+`.dll` de esa carpeta — los otros ya están internalizados en el `.merged.dll`.
+
 ## 5. Estado actual (v0.3.0)
 
 `RaftEffectInterpreter` escrito y **smoke test confirmado en juego real**

@@ -69,37 +69,18 @@
          y Mono resuelve por nombre de ensamblado: si esa copia se resuelve antes que
          la nuestra en BepInEx/plugins/, obtenemos MissingMethodException en tiempo de
          ejecución aunque compile perfecto (síntoma real visto 2026-07-03). Fusionar
-         evita depender del orden de resolución de ensamblados del AppDomain. -->
+         evita depender del orden de resolución de ensamblados del AppDomain.
+
+         IMPORTANTE: la lógica de merge vive en "ILRepack.targets" (archivo aparte,
+         junto a este .csproj), NO aquí. El paquete trae su PROPIO target automático
+         (AfterTargets="Build") que fusiona TODOS los .dll de la carpeta de salida
+         por defecto — si además definimos un target manual en este .csproj, ambos
+         corren en la misma build y chocan por tipos duplicados (error real visto
+         2026-07-03: "Duplicate type RaftLsgMod.Plugin"). La única forma soportada
+         de reemplazar ese comportamiento default es un archivo con el nombre exacto
+         "ILRepack.targets" en la carpeta del proyecto — así el paquete usa ESE
+         archivo en vez del suyo, sin ejecutar ambos. -->
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34" />
   </ItemGroup>
-
-  <Target Name="LsgILRepack" AfterTargets="Build">
-    <ItemGroup>
-      <LsgMergeAssemblies Include="$(TargetPath)" />
-      <LsgMergeAssemblies Include="$(TargetDir)LSG.SDK.Core.dll" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Text.Json.dll" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Text.Encodings.Web.dll" Condition="Exists('$(TargetDir)System.Text.Encodings.Web.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Buffers.dll" Condition="Exists('$(TargetDir)System.Buffers.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Memory.dll" Condition="Exists('$(TargetDir)System.Memory.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Threading.Tasks.Extensions.dll" Condition="Exists('$(TargetDir)System.Threading.Tasks.Extensions.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)Microsoft.Bcl.AsyncInterfaces.dll" Condition="Exists('$(TargetDir)Microsoft.Bcl.AsyncInterfaces.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll" Condition="Exists('$(TargetDir)System.Numerics.Vectors.dll')" />
-    </ItemGroup>
-    <ILRepack
-      Parallel="true"
-      Internalize="true"
-      DebugInfo="false"
-      InputAssemblies="@(LsgMergeAssemblies)"
-      OutputFile="$(TargetDir)Raft.LSG.Mod.merged.dll"
-      LibraryPath="$(TargetDir);$(BEPINEX_PATH)\core;$(RAFT_MANAGED_PATH)"
-      TargetKind="Dll" />
-    <!-- NO copiar de vuelta a $(TargetPath): sobrescribir el mismo archivo que
-         MSBuild usa para rastrear si el build está "al día" dispara este mismo
-         target AfterTargets="Build" una segunda vez en la misma invocación,
-         fusionando el .dll ya fusionado con los originales otra vez -> tipos
-         duplicados (error real visto 2026-07-03). El archivo final a desplegar
-         es Raft.LSG.Mod.merged.dll tal cual, sin renombrar. -->
-  </Target>
 
 </Project>

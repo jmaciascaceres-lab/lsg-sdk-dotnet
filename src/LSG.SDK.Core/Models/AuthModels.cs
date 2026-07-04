@@ -34,7 +34,7 @@ namespace LSG.SDK.Core.Models
         public string Email { get; set; } = string.Empty;
 
         [JsonPropertyName("age")]
-        public int Age { get; set; }
+        public int? Age { get; set; }
 
         [JsonPropertyName("roles")]
         public List<string> Roles { get; set; } = new();

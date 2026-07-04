@@ -80,6 +80,10 @@ namespace LSG.SDK.Core.Api
             PostRawAsync($"/videogames/{_config.GameId}/players/{playerId}/sessions/{sessionId}/end", req, ct, useHttpPatch: true);
 
         // ---------- Helpers HTTP ----------
+        // NOTA (2026-07-03): se evita JsonSerializer.DeserializeAsync(Stream, ...) —
+        // esa variante async/ValueTask produce "Invalid IL code"/InvalidProgramException
+        // en el Mono viejo de Raft/BepInEx (CLR 4.0.30319). Se lee el body completo
+        // como string (Task plano) y se deserializa con la versión síncrona.
 
         private async Task<T?> GetAsync<T>(string path, CancellationToken ct) where T : class
         {
@@ -90,14 +94,14 @@ namespace LSG.SDK.Core.Api
             using var response = await _http.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
 
-            var stream = await response.Content.ReadAsStreamAsync();
-            return await JsonSerializer.DeserializeAsync<T>(stream, JsonOpts, ct);
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<T>(json, JsonOpts);
         }
 
         private async Task<T?> PostAsync<T>(string path, object body, CancellationToken ct, bool useHttpPatch = false) where T : class
         {
-            var stream = await PostRawStreamAsync(path, body, ct, useHttpPatch);
-            return await JsonSerializer.DeserializeAsync<T>(stream, JsonOpts, ct);
+            var json = await PostRawStringAsync(path, body, ct, useHttpPatch);
+            return JsonSerializer.Deserialize<T>(json, JsonOpts);
         }
 
         /// <summary>
@@ -108,11 +112,11 @@ namespace LSG.SDK.Core.Api
         /// </summary>
         private async Task<JsonElement> PostRawAsync(string path, object body, CancellationToken ct, bool useHttpPatch = false)
         {
-            var stream = await PostRawStreamAsync(path, body, ct, useHttpPatch);
-            return await JsonSerializer.DeserializeAsync<JsonElement>(stream, JsonOpts, ct);
+            var json = await PostRawStringAsync(path, body, ct, useHttpPatch);
+            return JsonSerializer.Deserialize<JsonElement>(json, JsonOpts);
         }
 
-        private async Task<System.IO.Stream> PostRawStreamAsync(string path, object body, CancellationToken ct, bool useHttpPatch)
+        private async Task<string> PostRawStringAsync(string path, object body, CancellationToken ct, bool useHttpPatch)
         {
             var token = await _auth.GetValidTokenAsync(ct);
             var method = useHttpPatch ? HttpMethod.Patch : HttpMethod.Post;
@@ -125,14 +129,12 @@ namespace LSG.SDK.Core.Api
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var response = await _http.SendAsync(request, ct);
+            var responseBody = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
-            {
-                var errorBody = await response.Content.ReadAsStringAsync();
-                throw new LsgApiException((int)response.StatusCode, errorBody);
-            }
+                throw new LsgApiException((int)response.StatusCode, responseBody);
 
-            return await response.Content.ReadAsStreamAsync();
+            return responseBody;
         }
     }
 
