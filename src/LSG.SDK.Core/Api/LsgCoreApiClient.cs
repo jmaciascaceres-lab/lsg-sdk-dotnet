@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using LSG.SDK.Core.Auth;
 using LSG.SDK.Core.Config;
 using LSG.SDK.Core.Models;
@@ -29,11 +30,6 @@ namespace LSG.SDK.Core.Api
         private readonly HttpClient _http;
         private readonly LsgConfig _config;
         private readonly LsgAuthClient _auth;
-
-        private static readonly JsonSerializerOptions JsonOpts = new()
-        {
-            PropertyNameCaseInsensitive = true,
-        };
 
         public LsgCoreApiClient(LsgConfig config, LsgAuthClient auth, HttpClient? httpClient = null)
         {
@@ -65,25 +61,27 @@ namespace LSG.SDK.Core.Api
 
         // ---------- Offline ----------
 
-        public Task<JsonElement> SyncOfflineAsync(OfflineSyncRequestDto req, CancellationToken ct = default) =>
-            PostRawAsync("/offline/sync", req, ct);
+        public Task<JObject?> SyncOfflineAsync(OfflineSyncRequestDto req, CancellationToken ct = default) =>
+            PostAsync<JObject>("/offline/sync", req, ct);
 
         // ---------- M2: conectividad por juego (no invocar desde SDK-core genérico) ----------
 
-        public Task<JsonElement> ConnectAsync(int playerId, ConnectRequestDto req, CancellationToken ct = default) =>
-            PostRawAsync($"/videogames/{_config.GameId}/players/{playerId}/connect", req, ct);
+        public Task<JObject?> ConnectAsync(int playerId, ConnectRequestDto req, CancellationToken ct = default) =>
+            PostAsync<JObject>($"/videogames/{_config.GameId}/players/{playerId}/connect", req, ct);
 
-        public Task<JsonElement> StartSessionAsync(int playerId, SessionStartRequestDto req, CancellationToken ct = default) =>
-            PostRawAsync($"/videogames/{_config.GameId}/players/{playerId}/sessions", req, ct);
+        public Task<JObject?> StartSessionAsync(int playerId, SessionStartRequestDto req, CancellationToken ct = default) =>
+            PostAsync<JObject>($"/videogames/{_config.GameId}/players/{playerId}/sessions", req, ct);
 
-        public Task<JsonElement> EndSessionAsync(int playerId, int sessionId, SessionEndRequestDto req, CancellationToken ct = default) =>
-            PostRawAsync($"/videogames/{_config.GameId}/players/{playerId}/sessions/{sessionId}/end", req, ct, useHttpPatch: true);
+        public Task<JObject?> EndSessionAsync(int playerId, int sessionId, SessionEndRequestDto req, CancellationToken ct = default) =>
+            PostAsync<JObject>($"/videogames/{_config.GameId}/players/{playerId}/sessions/{sessionId}/end", req, ct, useHttpPatch: true);
 
         // ---------- Helpers HTTP ----------
-        // NOTA (2026-07-03): se evita JsonSerializer.DeserializeAsync(Stream, ...) —
-        // esa variante async/ValueTask produce "Invalid IL code"/InvalidProgramException
-        // en el Mono viejo de Raft/BepInEx (CLR 4.0.30319). Se lee el body completo
-        // como string (Task plano) y se deserializa con la versión síncrona.
+        // NOTA (2026-07-05): se migró de System.Text.Json a Newtonsoft.Json —
+        // System.Text.Json (DeserializeAsync, JsonTypeInfo<T>, Utf8JsonWriter)
+        // produce VTable/InvalidProgramException en el Mono viejo de BepInEx
+        // (CLR 4.0.30319). Newtonsoft.Json es el estándar probado para este
+        // entorno. JObject reemplaza a JsonElement (era struct; JObject es clase,
+        // ya no hace falta un PostRawAsync separado para evitar "where T : class").
 
         private async Task<T?> GetAsync<T>(string path, CancellationToken ct) where T : class
         {
@@ -95,32 +93,14 @@ namespace LSG.SDK.Core.Api
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<T>(json, JsonOpts);
+            return JsonConvert.DeserializeObject<T>(json);
         }
 
         private async Task<T?> PostAsync<T>(string path, object body, CancellationToken ct, bool useHttpPatch = false) where T : class
         {
-            var json = await PostRawStringAsync(path, body, ct, useHttpPatch);
-            return JsonSerializer.Deserialize<T>(json, JsonOpts);
-        }
-
-        /// <summary>
-        /// Variante para respuestas sin modelo tipado (JsonElement es struct: no puede
-        /// satisfacer "where T : class", así que no comparte el genérico PostAsync&lt;T&gt;
-        /// de arriba — evita el problema de "T?" con tipos valor no anidados en Nullable&lt;T&gt;
-        /// cuando T es genérico sin restricción).
-        /// </summary>
-        private async Task<JsonElement> PostRawAsync(string path, object body, CancellationToken ct, bool useHttpPatch = false)
-        {
-            var json = await PostRawStringAsync(path, body, ct, useHttpPatch);
-            return JsonSerializer.Deserialize<JsonElement>(json, JsonOpts);
-        }
-
-        private async Task<string> PostRawStringAsync(string path, object body, CancellationToken ct, bool useHttpPatch)
-        {
             var token = await _auth.GetValidTokenAsync(ct);
             var method = useHttpPatch ? HttpMethod.Patch : HttpMethod.Post;
-            var json = JsonSerializer.Serialize(body, JsonOpts);
+            var json = JsonConvert.SerializeObject(body);
 
             using var request = new HttpRequestMessage(method, $"{_config.CoreApiBaseUrl}{path}")
             {
@@ -134,7 +114,7 @@ namespace LSG.SDK.Core.Api
             if (!response.IsSuccessStatusCode)
                 throw new LsgApiException((int)response.StatusCode, responseBody);
 
-            return responseBody;
+            return JsonConvert.DeserializeObject<T>(responseBody);
         }
     }
 

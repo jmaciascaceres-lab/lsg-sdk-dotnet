@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Configuration;
@@ -20,7 +21,7 @@ namespace RaftLsgMod
     {
         private const string PluginGuid = "cl.usach.diinf.lsg.raft";
         private const string PluginName = "LSG Raft Adapter";
-        private const string PluginVersion = "0.3.3";
+        private const string PluginVersion = "0.4.1";
 
         // Confirmado: id_videogame = 71 (db_lsg.videogame, 2026-07-02).
         private const int LsgGameId = 71;
@@ -44,6 +45,9 @@ namespace RaftLsgMod
 
         private int? _playerId;
         private bool _isRedeemInFlight;
+        private System.Threading.Timer? _maintenanceTimer;
+        private System.Threading.Timer? _testRedeemTimer;
+        private DateTimeOffset _lastOfflineFlush = DateTimeOffset.UtcNow;
 
         private void Awake()
         {
@@ -72,9 +76,39 @@ namespace RaftLsgMod
 
             Logger.LogInfo($"{PluginName} v{PluginVersion} cargado. Patch de Harmony aplicado. Iniciando login...");
 
+            // WORKAROUND (2026-07-04): Update()/Start()/Coroutines de Unity no se
+            // están invocando para este componente en este entorno (OnEnable() sí
+            // corrió, Start() nunca — causa aún no aislada, pendiente para el HUD
+            // real de v1.0). Mientras tanto, el mantenimiento periódico (Tick de
+            // efectos + flush de cola offline) usa un System.Threading.Timer puro
+            // de .NET, que NO depende del loop de frames de Unity. Los callbacks
+            // corren en un hilo del thread-pool — seguro aquí porque nada de este
+            // camino toca APIs de Unity directamente (solo HTTP + estado propio).
+            _maintenanceTimer = new System.Threading.Timer(MaintenanceTick, null,
+                TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+
             // Awake() no puede ser async (BepInEx/Unity no lo soportan) — fire-and-forget
             // con captura explícita de excepciones para que nunca quede una Task sin observar.
             _ = InitializeAsync();
+        }
+
+        private void MaintenanceTick(object? state)
+        {
+            try
+            {
+                _timedEffects.Tick();
+
+                if (_playerId.HasValue &&
+                    (DateTimeOffset.UtcNow - _lastOfflineFlush).TotalSeconds >= _config.OfflineFlushIntervalSeconds)
+                {
+                    _lastOfflineFlush = DateTimeOffset.UtcNow;
+                    FlushOfflineQueueTick();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Fallo en MaintenanceTick: {ex}");
+            }
         }
 
         private void BindConfig()
@@ -112,12 +146,17 @@ namespace RaftLsgMod
 
                 await _mechanics.RefreshAsync();
                 Logger.LogInfo($"Catálogo de mecánicas cargado: {_mechanics.All.Count} mecánica(s) para game_id={LsgGameId}.");
-                // El flush periódico de la cola offline se maneja en Update() (ver
-                // _offlineFlushTimer) — NO usar InvokeRepeating aquí: es una API de
-                // Unity que exige ejecutarse en el hilo principal, y tras dos await
-                // (LoginAsync, RefreshAsync) esta continuación corre en un hilo del
-                // thread-pool sin SynchronizationContext de Unity, lo que produce
-                // NullReferenceException en la llamada nativa (visto 2026-07-04).
+
+                // WORKAROUND: disparo automático (no F6, ver nota en Awake()) 8s
+                // después de tener login+catálogo listos, para validar el ciclo
+                // completo de canje sin depender de Update()/Input.GetKeyDown.
+                Logger.LogInfo("Prueba automática de canje programada en 8s (ya no se usa F6 — ver nota en Awake()).");
+                _testRedeemTimer = new System.Threading.Timer(_ =>
+                {
+                    _testRedeemTimer?.Dispose();
+                    if (_playerId.HasValue)
+                        _ = TestRedeemPaddleSpeedBoostAsync(_playerId.Value);
+                }, null, TimeSpan.FromSeconds(8), Timeout.InfiniteTimeSpan);
             }
             catch (Exception ex)
             {

@@ -155,17 +155,21 @@ el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema
 real, la solución es persistir `TimedEffect` en un archivo local del
 adaptador y rehidratar el tracker en `Awake()`.
 
-## Nota de compatibilidad con Mono viejo (2026-07-03)
+## Nota de compatibilidad con Mono viejo — resuelta migrando a Newtonsoft.Json (2026-07-05)
 
-`JsonSerializer.DeserializeAsync<T>(Stream, ...)` (la variante async basada
-en `ValueTask`) produce `InvalidProgramException: Invalid IL code` en el
-Mono de BepInEx 5.4.x (CLR 4.0.30319, era .NET Framework 4.x) — **no es un
-problema de ILRepack ni de conflicto de ensamblados**, es una
-incompatibilidad real de esa API async en runtimes tan viejos. Todo el
-SDK-core lee el body HTTP completo como `string` (`ReadAsStringAsync()`,
-`Task` plano) y deserializa con la versión **síncrona**
-`JsonSerializer.Deserialize<T>(string)`. Si se agrega un nuevo método al
-cliente HTTP, seguir este mismo patrón — no reintroducir la variante Stream/async.
+`System.Text.Json` moderno (`DeserializeAsync`/`ValueTask`, `IAsyncDisposable`,
+`JsonTypeInfo<T>`, `Utf8JsonWriter`) produjo **cinco fallas distintas** en el
+Mono de BepInEx 5.4.x (CLR 4.0.30319, era .NET Framework 4.x) a lo largo del
+desarrollo — todas por la misma causa raíz: el despacho genérico virtual
+complejo de esa librería no es compatible con el JIT de ese runtime tan
+viejo. No era un problema de ILRepack ni de conflicto de ensamblados.
+
+**Se migró todo el SDK-core a `Newtonsoft.Json`** (`JsonConvert.SerializeObject`/
+`DeserializeObject`, atributos `[JsonProperty]`, `JToken`/`JObject` en vez de
+`JsonElement`) — el estándar de facto en modding BepInEx/Unity/Mono
+precisamente por no tener esta complejidad arquitectónica. Si se agrega un
+nuevo modelo o método al cliente HTTP, usar Newtonsoft.Json — no reintroducir
+`System.Text.Json` en este proyecto.
 
 ## Pendientes conocidos (no bloqueantes para M1)
 

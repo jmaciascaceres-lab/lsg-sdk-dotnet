@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using LSG.SDK.Core.Models;
+using Newtonsoft.Json.Linq;
 
 namespace LSG.SDK.Core.Mechanics
 {
@@ -44,16 +45,8 @@ namespace LSG.SDK.Core.Mechanics
     {
         public TimeSpan Resolve(MechanicDto mechanic, EffectContext context)
         {
-            if (mechanic.Options is null)
-                return TimeSpan.Zero;
-
-            if (mechanic.Options.Value.TryGetProperty("duration_seconds", out var prop) &&
-                prop.TryGetInt32(out var seconds))
-            {
-                return TimeSpan.FromSeconds(seconds);
-            }
-
-            return TimeSpan.Zero;
+            var seconds = mechanic.Options?["duration_seconds"]?.Value<int?>();
+            return seconds.HasValue ? TimeSpan.FromSeconds(seconds.Value) : TimeSpan.Zero;
         }
     }
 }

@@ -1,3 +1,4 @@
+using BepInEx.Logging;
 using HarmonyLib;
 
 namespace RaftLsgMod.Effects.Patches
@@ -35,6 +36,13 @@ namespace RaftLsgMod.Effects.Patches
     [HarmonyPatch(typeof(Paddle), nameof(Paddle.PaddlePaddle))]
     internal static class PaddleForcePatch
     {
+        // Logger propio: este patch es estático (Harmony lo invoca sin instancia),
+        // no tiene acceso al Logger de Plugin.cs. Un ManualLogSource independiente
+        // permite confirmar de forma OBJETIVA (valores reales de fuerza, no una
+        // impresión subjetiva de "se siente más rápido") si el multiplicador se
+        // aplicó cada vez que el jugador rema.
+        private static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource("RaftLsgMod.PaddleForcePatch");
+
         private static void Prefix(Paddle __instance, ref float force)
         {
             if (!PaddleSpeedBoostState.IsActive)
@@ -44,7 +52,9 @@ namespace RaftLsgMod.Effects.Patches
             if (playerNetwork is null || !playerNetwork.IsLocalPlayer)
                 return;
 
+            var original = force;
             force *= PaddleSpeedBoostState.Multiplier;
+            Log.LogInfo($"Paddle Speed Boost aplicado al remar: force {original:F2} -> {force:F2} (x{PaddleSpeedBoostState.Multiplier:F2}).");
         }
     }
 }

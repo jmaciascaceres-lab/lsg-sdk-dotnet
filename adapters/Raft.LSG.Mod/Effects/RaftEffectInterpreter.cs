@@ -1,5 +1,6 @@
 using LSG.SDK.Core.Mechanics;
 using LSG.SDK.Core.Models;
+using Newtonsoft.Json.Linq;
 
 namespace RaftLsgMod.Effects
 {
@@ -68,13 +69,8 @@ namespace RaftLsgMod.Effects
 
         private static float ReadFloat(MechanicDto mechanic, string key, float fallback)
         {
-            if (mechanic.Options is null)
-                return fallback;
-
-            if (mechanic.Options.Value.TryGetProperty(key, out var prop) && prop.TryGetSingle(out var value))
-                return value;
-
-            return fallback;
+            var value = mechanic.Options?[key]?.Value<float?>();
+            return value ?? fallback;
         }
     }
 }

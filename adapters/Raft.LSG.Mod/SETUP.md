@@ -80,29 +80,31 @@ fusionarlos entre sí → `Duplicate type RaftLsgMod.Plugin`.
 `<PackageReference>`. No se requiere ningún paso adicional del lado del
 desarrollador; el archivo ya está en el repo.
 
-### 4.2. Corrección: `Microsoft.Bcl.AsyncInterfaces` y `System.Threading.Tasks.Extensions` — ni fusionar, ni omitir (2026-07-04)
+### 4.2. Historial resuelto: `System.Text.Json` era incompatible con este Mono (2026-07-04/05)
 
-`System.Text.Json` no tiene un asset específico para `netstandard2.1` — NuGet
-resuelve al asset compatible con `netstandard2.0`, que **sí depende
-genuinamente** de `Microsoft.Bcl.AsyncInterfaces.dll` y
-`System.Threading.Tasks.Extensions.dll` en tiempo de ejecución. Estos dos
-ensamblados están **deliberadamente excluidos** de la fusión de ILRepack
-(fusionarlos junto a `netstandard.dll`, que ya trae `IAsyncDisposable`/
-`ValueTask` nativos en netstandard2.1, generaba IL corrupto — ver nota en
-`ILRepack.targets`), pero **eso no significa que sobren**: sin ellos
-presentes en tiempo de ejecución, `JsonSerializer` falla con
-`TypeLoadException` al inicializar `JsonTypeInfo<T>` (visto 2026-07-04).
+Durante el desarrollo se encontraron **cinco fallas distintas** originadas en
+la maquinaria interna de `System.Text.Json` moderno (`DeserializeAsync`/
+`ValueTask`, `IAsyncDisposable` duplicado al fusionar, `Microsoft.Bcl.AsyncInterfaces`
+faltante, `JsonTypeInfo<T>` VTable, `Utf8JsonWriter` VTable) — todas por la
+misma causa raíz: el despacho genérico virtual complejo de esa librería no es
+compatible con el JIT del Mono viejo de BepInEx (CLR 4.0.30319).
 
-**Deploy correcto — 3 archivos, no 1:**
+**Resolución (2026-07-05): se migró todo el SDK-core a `Newtonsoft.Json`**,
+el estándar de facto para modding BepInEx/Unity/Mono, sin esa complejidad
+arquitectónica. Con esto:
+
+- El deploy vuelve a ser **un solo archivo** — `Newtonsoft.Json.dll` no tiene
+  dependencias externas (a diferencia de `System.Text.Json`, que arrastraba
+  media docena de polyfills netstandard2.0).
+- `ILRepack.targets` fusiona solo `LSG.SDK.Core.dll` + `Newtonsoft.Json.dll`.
 
 ```powershell
+dotnet build adapters\Raft.LSG.Mod\Raft.LSG.Mod.csproj -c Release
 copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Raft.LSG.Mod.merged.dll "<ruta_raft>\BepInEx\plugins\"
-copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\Microsoft.Bcl.AsyncInterfaces.dll "<ruta_raft>\BepInEx\plugins\"
-copy adapters\Raft.LSG.Mod\bin\Release\netstandard2.1\System.Threading.Tasks.Extensions.dll "<ruta_raft>\BepInEx\plugins\"
 ```
 
-No copiar `Raft.LSG.Mod.dll` (el original sin fusionar) ni el resto de los
-`.dll` de esa carpeta — los otros ya están internalizados en el `.merged.dll`.
+No copiar `Raft.LSG.Mod.dll` (el original sin fusionar) ni ningún otro `.dll`
+de esa carpeta — todo lo necesario ya está internalizado en el `.merged.dll`.
 
 ## 5. Estado actual (v0.3.0)
 

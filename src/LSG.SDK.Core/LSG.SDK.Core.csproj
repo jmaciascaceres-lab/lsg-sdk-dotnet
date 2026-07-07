@@ -12,7 +12,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- Newtonsoft.Json en vez de System.Text.Json (2026-07-05): la maquinaria
+         interna de System.Text.Json moderno (JsonTypeInfo<T>, Utf8JsonWriter,
+         despacho genérico virtual) falla con VTable/InvalidProgramException en
+         el Mono viejo de BepInEx (CLR 4.0.30319) — 5 fallas distintas en esa
+         familia durante el desarrollo de este SDK. Newtonsoft.Json es el
+         estándar de facto en modding BepInEx/Unity/Mono precisamente porque su
+         arquitectura (reflection clásica, sin esa complejidad) es compatible. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>

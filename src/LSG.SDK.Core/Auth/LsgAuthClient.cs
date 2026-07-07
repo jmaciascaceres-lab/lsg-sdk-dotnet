@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
-using System.Text.Json;
+using Newtonsoft.Json;
 using LSG.SDK.Core.Config;
 using LSG.SDK.Core.Models;
 
@@ -49,7 +49,7 @@ namespace LSG.SDK.Core.Auth
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
-            var login = JsonSerializer.Deserialize<LoginResponse>(json, JsonOpts)
+            var login = JsonConvert.DeserializeObject<LoginResponse>(json)
                         ?? throw new InvalidOperationException("Respuesta de login vacía.");
 
             _session = login;
@@ -103,17 +103,13 @@ namespace LSG.SDK.Core.Auth
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            var refreshed = JsonSerializer.Deserialize<LoginResponse>(json, JsonOpts)
+            var refreshed = JsonConvert.DeserializeObject<LoginResponse>(json)
                              ?? throw new InvalidOperationException("Respuesta de refresh vacía.");
 
             _session = refreshed;
             _expiresAt = refreshed.ExpiresAt;
         }
 
-        private static readonly JsonSerializerOptions JsonOpts = new()
-        {
-            PropertyNameCaseInsensitive = true,
-        };
 
         public void Dispose() => _refreshLock.Dispose();
     }

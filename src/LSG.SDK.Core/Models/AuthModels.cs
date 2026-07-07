@@ -1,48 +1,48 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace LSG.SDK.Core.Models
 {
     public sealed class LoginResponse
     {
-        [JsonPropertyName("access_token")]
+        [JsonProperty("access_token")]
         public string AccessToken { get; set; } = string.Empty;
 
-        [JsonPropertyName("token_type")]
+        [JsonProperty("token_type")]
         public string TokenType { get; set; } = string.Empty;
 
-        [JsonPropertyName("expires_in_seconds")]
+        [JsonProperty("expires_in_seconds")]
         public int ExpiresInSeconds { get; set; }
 
-        [JsonPropertyName("expires_at")]
+        [JsonProperty("expires_at")]
         public DateTimeOffset ExpiresAt { get; set; }
 
-        [JsonPropertyName("player")]
+        [JsonProperty("player")]
         public PlayerSummary Player { get; set; } = new();
     }
 
     public sealed class PlayerSummary
     {
-        [JsonPropertyName("id_players")]
+        [JsonProperty("id_players")]
         public int IdPlayers { get; set; }
 
-        [JsonPropertyName("name")]
+        [JsonProperty("name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("email")]
+        [JsonProperty("email")]
         public string Email { get; set; } = string.Empty;
 
-        [JsonPropertyName("age")]
+        [JsonProperty("age")]
         public int? Age { get; set; }
 
-        [JsonPropertyName("roles")]
+        [JsonProperty("roles")]
         public List<string> Roles { get; set; } = new();
     }
 
     public sealed class TokenRemainingResponse
     {
-        [JsonPropertyName("expires_in_seconds")]
+        [JsonProperty("expires_in_seconds")]
         public int ExpiresInSeconds { get; set; }
     }
 }

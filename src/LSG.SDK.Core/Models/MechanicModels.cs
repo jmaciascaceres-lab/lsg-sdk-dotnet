@@ -1,19 +1,19 @@
 using System.Linq;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LSG.SDK.Core.Models
 {
     public sealed class MechanicDto
     {
-        [JsonPropertyName("id_modifiable_mechanic_videogame")]
+        [JsonProperty("id_modifiable_mechanic_videogame")]
         public int MmvId { get; set; }
 
-        [JsonPropertyName("id_videogame")]
+        [JsonProperty("id_videogame")]
         public int VideogameId { get; set; }
 
-        [JsonPropertyName("videogame_name")]
+        [JsonProperty("videogame_name")]
         public string VideogameName { get; set; } = string.Empty;
 
         /// <summary>
@@ -22,19 +22,19 @@ namespace LSG.SDK.Core.Models
         /// (caso detectado en algunas mecánicas legacy de Subnautica). El intérprete
         /// de efectos DEBE tolerar esto y aplicar un fallback seguro (ver IEffectInterpreter).
         /// </summary>
-        [JsonPropertyName("options")]
-        public JsonElement? Options { get; set; }
+        [JsonProperty("options")]
+        public JToken? Options { get; set; }
 
-        [JsonPropertyName("id_modifiable_mechanic")]
+        [JsonProperty("id_modifiable_mechanic")]
         public int MechanicId { get; set; }
 
-        [JsonPropertyName("modifiable_mechanic_name")]
+        [JsonProperty("modifiable_mechanic_name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("modifiable_mechanic_description")]
+        [JsonProperty("modifiable_mechanic_description")]
         public string Description { get; set; } = string.Empty;
 
-        [JsonPropertyName("modifiable_mechanic_type")]
+        [JsonProperty("modifiable_mechanic_type")]
         public string Type { get; set; } = string.Empty; // buff | nerf | speed | health | economy | modifier
 
         /// <summary>
@@ -44,83 +44,83 @@ namespace LSG.SDK.Core.Models
         /// </summary>
         public bool HasPlaceholderOrEmptyOptions()
         {
-            if (Options is null || Options.Value.ValueKind != JsonValueKind.Object)
+            if (Options is not JObject obj)
                 return true;
 
-            var props = Options.Value.EnumerateObject().Select(p => p.Name).ToList();
+            var props = obj.Properties().Select(p => p.Name).ToList();
             return props.Count == 0 || (props.Count == 1 && props[0] == "additionalProp1");
         }
     }
 
     public sealed class RedeemRequestDto
     {
-        [JsonPropertyName("modifiable_mechanic_videogame_id")]
+        [JsonProperty("modifiable_mechanic_videogame_id")]
         public int ModifiableMechanicVideogameId { get; set; }
 
-        [JsonPropertyName("point_dimension_id")]
+        [JsonProperty("point_dimension_id")]
         public int? PointDimensionId { get; set; }
 
-        [JsonPropertyName("attribute_id")]
+        [JsonProperty("attribute_id")]
         public int? AttributeId { get; set; }
 
-        [JsonPropertyName("amount")]
+        [JsonProperty("amount")]
         public int Amount { get; set; }
 
-        [JsonPropertyName("metadata")]
+        [JsonProperty("metadata")]
         public Dictionary<string, object>? Metadata { get; set; }
     }
 
     public sealed class RedeemPreviewResponse
     {
-        [JsonPropertyName("can_redeem")]
+        [JsonProperty("can_redeem")]
         public bool CanRedeem { get; set; }
 
-        [JsonPropertyName("current_balance")]
+        [JsonProperty("current_balance")]
         public int CurrentBalance { get; set; }
 
-        [JsonPropertyName("required_amount")]
+        [JsonProperty("required_amount")]
         public int RequiredAmount { get; set; }
 
-        [JsonPropertyName("resulting_balance")]
+        [JsonProperty("resulting_balance")]
         public int ResultingBalance { get; set; }
 
-        [JsonPropertyName("point_dimension_id")]
+        [JsonProperty("point_dimension_id")]
         public int PointDimensionId { get; set; }
 
-        [JsonPropertyName("modifiable_mechanic_videogame_id")]
+        [JsonProperty("modifiable_mechanic_videogame_id")]
         public int ModifiableMechanicVideogameId { get; set; }
     }
 
     public sealed class RedeemResponse
     {
-        [JsonPropertyName("status")]
+        [JsonProperty("status")]
         public string Status { get; set; } = string.Empty;
 
-        [JsonPropertyName("points_ledger_id")]
+        [JsonProperty("points_ledger_id")]
         public int PointsLedgerId { get; set; }
 
-        [JsonPropertyName("redeemed_amount")]
+        [JsonProperty("redeemed_amount")]
         public int RedeemedAmount { get; set; }
 
-        [JsonPropertyName("resulting_balance")]
+        [JsonProperty("resulting_balance")]
         public int ResultingBalance { get; set; }
 
-        [JsonPropertyName("modifiable_mechanic_videogame_id")]
+        [JsonProperty("modifiable_mechanic_videogame_id")]
         public int ModifiableMechanicVideogameId { get; set; }
     }
 
     public sealed class PointsBalanceEntry
     {
-        [JsonPropertyName("id_point_dimension")]
+        [JsonProperty("id_point_dimension")]
         public int PointDimensionId { get; set; }
 
-        [JsonPropertyName("dimension_code")]
+        [JsonProperty("dimension_code")]
         public string DimensionCode { get; set; } = string.Empty; // ej. FISICO_BASE, MENTAL_BASE
 
-        [JsonPropertyName("id_attributes")]
+        [JsonProperty("id_attributes")]
         public int? AttributeId { get; set; }
 
-        [JsonPropertyName("balance")]
+        [JsonProperty("balance")]
         public int Balance { get; set; }
     }
 }

@@ -4,35 +4,29 @@
   <!--
     Este archivo reemplaza el target automático que ILRepack.Lib.MSBuild.Task
     ejecuta por defecto (que fusiona TODOS los .dll de la carpeta de salida y
-    luego los borra — ver README del paquete). Con este archivo presente, el
-    paquete usa ESTA lógica en vez de la suya, evitando la doble ejecución que
-    causaba "Duplicate type" (visto 2026-07-03).
+    luego los borra). Con este archivo presente, el paquete usa ESTA lógica en
+    vez de la suya, evitando la doble ejecución que causaba "Duplicate type"
+    (visto 2026-07-03).
 
     Salida: Raft.LSG.Mod.merged.dll — NO se sobrescribe Raft.LSG.Mod.dll
     (el original, sin fusionar, sigue existiendo en la misma carpeta).
     Desplegar a BepInEx/plugins/ SOLO el .merged.dll — ver SETUP.md.
+
+    SIMPLIFICADO 2026-07-05: tras migrar de System.Text.Json a Newtonsoft.Json
+    (ver README del SDK-core), ya no hace falta fusionar ni desplegar sueltos
+    los polyfills netstandard2.0 (Microsoft.Bcl.AsyncInterfaces,
+    System.Threading.Tasks.Extensions, System.Buffers, System.Memory,
+    System.Runtime.CompilerServices.Unsafe, System.Numerics.Vectors,
+    System.Text.Encodings.Web) — Newtonsoft.Json es un único ensamblado
+    autocontenido, sin dependencias externas. El deploy vuelve a ser UN
+    solo archivo.
   -->
 
   <Target Name="ILRepacker" AfterTargets="Build">
     <ItemGroup>
       <LsgMergeAssemblies Include="$(TargetPath)" />
       <LsgMergeAssemblies Include="$(TargetDir)LSG.SDK.Core.dll" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Text.Json.dll" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Text.Encodings.Web.dll" Condition="Exists('$(TargetDir)System.Text.Encodings.Web.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Buffers.dll" Condition="Exists('$(TargetDir)System.Buffers.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Memory.dll" Condition="Exists('$(TargetDir)System.Memory.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll')" />
-      <LsgMergeAssemblies Include="$(TargetDir)System.Numerics.Vectors.dll" Condition="Exists('$(TargetDir)System.Numerics.Vectors.dll')" />
-      <!-- DELIBERADAMENTE EXCLUIDOS de la fusión (no borrar de $(TargetDir), solo
-           de esta lista): Microsoft.Bcl.AsyncInterfaces.dll y
-           System.Threading.Tasks.Extensions.dll son polyfills de IAsyncDisposable/
-           ValueTask para netstandard2.0. Nuestro target es netstandard2.1, que ya
-           trae esos tipos NATIVOS en netstandard.dll. Fusionarlos generaba dos
-           definiciones de IAsyncDisposable::DisposeAsync() en el mismo ensamblado,
-           y ILRepack no resolvía cuál usar -> IL corrupto en CUALQUIER método async
-           del merge (InvalidProgramException real visto 2026-07-03/04, incluso en
-           LoginAsync, que no usa esa interfaz). Siguen resolubles vía LibraryPath
-           por si algo los referencia externamente, solo no se internalizan. -->
+      <LsgMergeAssemblies Include="$(TargetDir)Newtonsoft.Json.dll" />
     </ItemGroup>
     <ILRepack
       Parallel="true"
