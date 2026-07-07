@@ -4,8 +4,7 @@ Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG.
 Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta
 este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 
-Ver decisión de topología multi-repo (por runtime, no por cluster técnico)
-en la conversación de diseño del `20260702` — resumen:
+Ver decisión de topología multi-repo (por runtime, no por cluster técnico):
 
 | Repo | Runtime | Clusters/juegos |
 |---|---|---|
@@ -28,22 +27,22 @@ lsg-sdk-dotnet/
 Cada adaptador nuevo se agrega como `adapters/<Juego>.LSG.Mod/` y referencia
 `LSG.SDK.Core` vía `ProjectReference` mientras el SDK está en desarrollo
 activo, migrando a `PackageReference` (NuGet privado) cuando exista un tag
-estable — así un tesista puede fijar versión de su adaptador sin arrastrar
+estable - así un tesista puede fijar versión de su adaptador sin arrastrar
 cambios en curso de otro juego.
 
 ## Estado de adaptadores
 
 | Adaptador | Cluster | Estado |
 |---|---|---|
-| `Raft.LSG.Mod` | BEPINEX | v0.3.0 — smoke test OK en juego real, login + ciclo de canje manual (F6) escritos, pendiente validar end-to-end con credenciales reales |
+| `Raft.LSG.Mod` | BEPINEX | v0.3.0 - smoke test OK en juego real, login + ciclo de canje manual (F6) escritos, pendiente validar end-to-end con credenciales reales |
 | `Valheim.LSG.Mod` | BEPINEX | No iniciado |
 | `Subnautica.LSG.Mod` | BEPINEX | No iniciado |
 | `VRising.LSG.Mod` | BEPINEX | No iniciado |
 | `StardewValley.LSG.Mod` | SMAPI | No iniciado |
 | `Terraria.LSG.Mod` | TMODLOADER | No iniciado |
-| ~~`CoreKeeper.LSG.Mod`~~ | ~~BEPINEX~~ | **Archivado** (`adapters/_archived/`) — descartado por infactibilidad de modding, ver `ARCHIVED.md`. Reemplazado por Raft. |
+| ~~`CoreKeeper.LSG.Mod`~~ | ~~BEPINEX~~ | **Archivado** (`adapters/_archived/`) - descartado por infactibilidad de modding, ver `ARCHIVED.md`. Reemplazado por Raft. |
 
-> Garry's Mod (reemplazo de Starbound) NO pertenece a este repo — es
+> Garry's Mod (reemplazo de Starbound) NO pertenece a este repo - es
 > `LUA_SCRIPT`, corresponde a `lsg-sdk-lua` (repo aún no creado).
 
 Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas
