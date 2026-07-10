@@ -52,6 +52,10 @@
       <HintPath>$(RAFT_MANAGED_PATH)\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(RAFT_MANAGED_PATH)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(BEPINEX_PATH)\core\0Harmony.dll</HintPath>
       <Private>false</Private>

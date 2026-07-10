@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
@@ -21,11 +22,12 @@ namespace RaftLsgMod
     {
         private const string PluginGuid = "cl.usach.diinf.lsg.raft";
         private const string PluginName = "LSG Raft Adapter";
-        private const string PluginVersion = "0.4.1";
+        private const string PluginVersion = "1.0.0";
 
         // Confirmado: id_videogame = 71 (db_lsg.videogame, 2026-07-02).
         private const int LsgGameId = 71;
         private const int MmvPaddleSpeedBoost = 66;
+        private const int MmvLootLuckBoost = 67;
 
         private LsgConfig _config = null!;
         private LsgAuthClient _auth = null!;
@@ -39,15 +41,24 @@ namespace RaftLsgMod
 
         private ConfigEntry<string> _lsgEmail = null!;
         private ConfigEntry<string> _lsgPassword = null!;
+        private ConfigEntry<bool> _autoLoginOnStart = null!;
         private ConfigEntry<int> _testAttributeId = null!;
         private ConfigEntry<int> _testAmount = null!;
-        private ConfigEntry<KeyCode> _testRedeemKey = null!;
 
         private int? _playerId;
         private bool _isRedeemInFlight;
+        private bool _isLoggingIn;
+        private string? _lastError;
         private System.Threading.Timer? _maintenanceTimer;
-        private System.Threading.Timer? _testRedeemTimer;
         private DateTimeOffset _lastOfflineFlush = DateTimeOffset.UtcNow;
+        private DateTimeOffset _lastBalanceRefresh = DateTimeOffset.MinValue;
+
+        // ---------- Estado del HUD (OnGUI) ----------
+        private string _hudEmail = string.Empty;
+        private string _hudPassword = string.Empty;
+        private List<PointsBalanceEntry>? _cachedBalance;
+        private bool _onGuiHeartbeatLogged;
+        private Rect _hudRect = new(10, 10, 320, 220);
 
         private void Awake()
         {
@@ -62,6 +73,9 @@ namespace RaftLsgMod
             _durationResolver = new PassthroughDurationResolver();
             _interpreter = new RaftEffectInterpreter();
 
+            _hudEmail = _lsgEmail.Value;
+            _hudPassword = _lsgPassword.Value;
+
             _mechanics.OnPlaceholderOptionsDetected += m =>
                 Logger.LogWarning($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales — revisar catálogo.");
 
@@ -74,22 +88,44 @@ namespace RaftLsgMod
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll();
 
-            Logger.LogInfo($"{PluginName} v{PluginVersion} cargado. Patch de Harmony aplicado. Iniciando login...");
+            Logger.LogInfo($"{PluginName} v{PluginVersion} cargado. Patch de Harmony aplicado.");
 
-            // WORKAROUND (2026-07-04): Update()/Start()/Coroutines de Unity no se
-            // están invocando para este componente en este entorno (OnEnable() sí
-            // corrió, Start() nunca — causa aún no aislada, pendiente para el HUD
-            // real de v1.0). Mientras tanto, el mantenimiento periódico (Tick de
-            // efectos + flush de cola offline) usa un System.Threading.Timer puro
-            // de .NET, que NO depende del loop de frames de Unity. Los callbacks
-            // corren en un hilo del thread-pool — seguro aquí porque nada de este
-            // camino toca APIs de Unity directamente (solo HTTP + estado propio).
+            // Mantenimiento periódico (Tick de efectos, flush offline, refresh de
+            // saldo) vía System.Threading.Timer puro de .NET — NO depende de
+            // Update()/Start() de Unity (ver nota histórica en README del SDK-core:
+            // esos callbacks no se invocan en este entorno, causa aún sin aislar).
             _maintenanceTimer = new System.Threading.Timer(MaintenanceTick, null,
                 TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
 
-            // Awake() no puede ser async (BepInEx/Unity no lo soportan) — fire-and-forget
-            // con captura explícita de excepciones para que nunca quede una Task sin observar.
-            _ = InitializeAsync();
+            if (_autoLoginOnStart.Value && !string.IsNullOrWhiteSpace(_lsgEmail.Value) && !string.IsNullOrWhiteSpace(_lsgPassword.Value))
+            {
+                Logger.LogInfo("AutoLoginOnStart habilitado — iniciando sesión con credenciales de BepInEx/config...");
+                _ = LoginAndInitializeAsync(_lsgEmail.Value, _lsgPassword.Value);
+            }
+            else
+            {
+                Logger.LogInfo("Esperando login desde el HUD (esquina superior izquierda de la pantalla).");
+            }
+        }
+
+        private void BindConfig()
+        {
+            // ADVERTENCIA DE SEGURIDAD (aceptado para esta fase de pruebas manuales):
+            // si se completa aquí, la contraseña queda en texto plano en
+            // BepInEx/config/cl.usach.diinf.lsg.raft.cfg. El HUD (OnGUI) permite
+            // loguearse sin tocar este archivo; estos campos solo sirven como
+            // atajo opcional para pruebas repetidas. NO usar cuenta de producción.
+            _lsgEmail = Config.Bind("LSG Credentials", "Email", "",
+                "Email de la cuenta LSG (opcional — atajo para AutoLoginOnStart). Cuenta de prueba, no producción.");
+            _lsgPassword = Config.Bind("LSG Credentials", "Password", "",
+                "Password en texto plano (opcional — atajo para AutoLoginOnStart). Se puede loguear desde el HUD en vez de esto.");
+            _autoLoginOnStart = Config.Bind("LSG Credentials", "AutoLoginOnStart", true,
+                "Si es true y Email/Password están completos, inicia sesión automáticamente al cargar el mod.");
+
+            _testAttributeId = Config.Bind("LSG Test", "TestAttributeId", 2,
+                "attribute_id a debitar en el canje (2 = FISICO_BASE, tentativo — confirmar contra /attributes).");
+            _testAmount = Config.Bind("LSG Test", "TestAmount", 30,
+                "Monto a canjear al presionar el botón de Paddle Speed Boost en el HUD.");
         }
 
         private void MaintenanceTick(object? state)
@@ -102,7 +138,13 @@ namespace RaftLsgMod
                     (DateTimeOffset.UtcNow - _lastOfflineFlush).TotalSeconds >= _config.OfflineFlushIntervalSeconds)
                 {
                     _lastOfflineFlush = DateTimeOffset.UtcNow;
-                    FlushOfflineQueueTick();
+                    _ = FlushOfflineQueueAsync(_playerId.Value);
+                }
+
+                if (_playerId.HasValue && (DateTimeOffset.UtcNow - _lastBalanceRefresh).TotalSeconds >= 10)
+                {
+                    _lastBalanceRefresh = DateTimeOffset.UtcNow;
+                    _ = RefreshBalanceAsync(_playerId.Value);
                 }
             }
             catch (Exception ex)
@@ -111,131 +153,48 @@ namespace RaftLsgMod
             }
         }
 
-        private void BindConfig()
+        /// <summary>
+        /// Login interactivo real: invocado desde el botón "Login" del HUD (OnGUI)
+        /// o, opcionalmente, de forma automática al arrancar si AutoLoginOnStart
+        /// está habilitado. Reemplaza el flujo v0.3.x que SOLO leía credenciales
+        /// del archivo de configuración.
+        /// </summary>
+        private async Task LoginAndInitializeAsync(string email, string password)
         {
-            // ADVERTENCIA DE SEGURIDAD (aceptado para esta fase de pruebas manuales):
-            // la contraseña queda en texto plano en BepInEx/config/cl.usach.diinf.lsg.raft.cfg.
-            // NO usar credenciales reales de producción para este smoke test — usar una
-            // cuenta de prueba. Reemplazar por login interactivo (UI in-game) antes de v1.0.
-            _lsgEmail = Config.Bind("LSG Credentials", "Email", "",
-                "Email de la cuenta LSG (cuenta de prueba, no producción).");
-            _lsgPassword = Config.Bind("LSG Credentials", "Password", "",
-                "Password en texto plano — solo para pruebas manuales. Reemplazar por login in-game antes de v1.0.");
-
-            _testAttributeId = Config.Bind("LSG Test", "TestAttributeId", 2,
-                "attribute_id a debitar en el canje de prueba (2 = FISICO_BASE, tentativo — confirmar contra /attributes).");
-            _testAmount = Config.Bind("LSG Test", "TestAmount", 30,
-                "Monto a canjear en la prueba manual (coincide con el costo sugerido de Paddle Speed Boost).");
-            _testRedeemKey = Config.Bind("LSG Test", "TestRedeemKey", KeyCode.F6,
-                "Tecla para disparar un canje manual de prueba de Paddle Speed Boost (mmv=66).");
-        }
-
-        private async Task InitializeAsync()
-        {
+            _isLoggingIn = true;
+            _lastError = null;
             try
             {
-                if (string.IsNullOrWhiteSpace(_lsgEmail.Value) || string.IsNullOrWhiteSpace(_lsgPassword.Value))
-                {
-                    Logger.LogWarning("Email/Password no configurados en BepInEx/config/cl.usach.diinf.lsg.raft.cfg — login omitido.");
-                    return;
-                }
-
-                var session = await _auth.LoginAsync(_lsgEmail.Value, _lsgPassword.Value);
+                var session = await _auth.LoginAsync(email, password);
                 _playerId = session.Player.IdPlayers;
                 Logger.LogInfo($"Login OK — player_id={_playerId}, roles=[{string.Join(",", session.Player.Roles)}]");
 
                 await _mechanics.RefreshAsync();
                 Logger.LogInfo($"Catálogo de mecánicas cargado: {_mechanics.All.Count} mecánica(s) para game_id={LsgGameId}.");
 
-                // WORKAROUND: disparo automático (no F6, ver nota en Awake()) 8s
-                // después de tener login+catálogo listos, para validar el ciclo
-                // completo de canje sin depender de Update()/Input.GetKeyDown.
-                Logger.LogInfo("Prueba automática de canje programada en 8s (ya no se usa F6 — ver nota en Awake()).");
-                _testRedeemTimer = new System.Threading.Timer(_ =>
-                {
-                    _testRedeemTimer?.Dispose();
-                    if (_playerId.HasValue)
-                        _ = TestRedeemPaddleSpeedBoostAsync(_playerId.Value);
-                }, null, TimeSpan.FromSeconds(8), Timeout.InfiniteTimeSpan);
+                await RefreshBalanceAsync(_playerId.Value);
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Fallo en InitializeAsync: {ex}");
+                _lastError = ex.Message;
+                Logger.LogError($"Fallo en LoginAndInitializeAsync: {ex}");
+            }
+            finally
+            {
+                _isLoggingIn = false;
             }
         }
 
-        private void OnEnable()
-        {
-            Logger.LogInfo("OnEnable() llamado — el componente está activo en la escena.");
-        }
-
-        private void Start()
-        {
-            Logger.LogInfo("Start() llamado.");
-            StartCoroutine(HeartbeatCoroutine());
-        }
-
-        private IEnumerator HeartbeatCoroutine()
-        {
-            yield return new WaitForSeconds(1f);
-            Logger.LogInfo("Coroutine heartbeat (1s tras Start) — independiente de Update().");
-        }
-
-        private float _offlineFlushTimer;
-        private bool _updateHeartbeatLogged;
-
-        private void Update()
+        private async Task RefreshBalanceAsync(int playerId)
         {
             try
             {
-                if (!_updateHeartbeatLogged)
-                {
-                    _updateHeartbeatLogged = true;
-                    Logger.LogInfo("Update() ejecutándose (heartbeat) — playerId=" + (_playerId?.ToString() ?? "null"));
-                }
-
-                _timedEffects.Tick();
-
-                if (Input.GetKeyDown(_testRedeemKey.Value))
-                {
-                    Logger.LogInfo($"Tecla de prueba ({_testRedeemKey.Value}) detectada. playerId={_playerId}, redeemInFlight={_isRedeemInFlight}");
-
-                    if (_playerId.HasValue && !_isRedeemInFlight)
-                    {
-                        _ = TestRedeemPaddleSpeedBoostAsync(_playerId.Value);
-                    }
-                }
-
-                if (_playerId.HasValue)
-                {
-                    _offlineFlushTimer += Time.deltaTime;
-                    if (_offlineFlushTimer >= _config.OfflineFlushIntervalSeconds)
-                    {
-                        _offlineFlushTimer = 0f;
-                        FlushOfflineQueueTick();
-                    }
-                }
+                _cachedBalance = await _api.GetPointsBalanceAsync(playerId);
             }
             catch (Exception ex)
             {
-                // Capturado explícitamente: si UnityEngine.Input lanza porque el juego
-                // usa el nuevo Input System exclusivamente (Active Input Handling),
-                // esta excepción quedaría silenciada por Unity/BepInEx sin este catch.
-                Logger.LogError($"Excepción en Update(): {ex}");
+                Logger.LogError($"Fallo al refrescar saldo: {ex}");
             }
-        }
-
-        /// <summary>
-        /// Invocado desde Update() (hilo principal, seguro). Delega a un Task
-        /// fire-and-forget con manejo de excepciones — no puede ser async void
-        /// directamente por buenas prácticas.
-        /// </summary>
-        private void FlushOfflineQueueTick()
-        {
-            if (!_playerId.HasValue)
-                return;
-
-            _ = FlushOfflineQueueAsync(_playerId.Value);
         }
 
         private async Task FlushOfflineQueueAsync(int playerId)
@@ -252,20 +211,103 @@ namespace RaftLsgMod
             }
         }
 
+        // ---------- HUD (OnGUI) ----------
+        // NOTA: OnGUI es OTRO callback de Unity por frame (igual que Update()/Start(),
+        // que no se invocan en este entorno por una causa aún sin aislar). Se agrega
+        // el mismo patrón de heartbeat + try/catch para diagnosticar de inmediato si
+        // OnGUI tampoco corre, en vez de descubrirlo después de construir todo el HUD.
+
+        private void OnGUI()
+        {
+            try
+            {
+                if (!_onGuiHeartbeatLogged)
+                {
+                    _onGuiHeartbeatLogged = true;
+                    Logger.LogInfo("OnGUI() ejecutándose (heartbeat) — el HUD debería ser visible en pantalla.");
+                }
+
+                GUI.Box(_hudRect, "LSG - Raft Adapter");
+                GUILayout.BeginArea(new Rect(_hudRect.x + 10, _hudRect.y + 25, _hudRect.width - 20, _hudRect.height - 35));
+
+                if (!_playerId.HasValue)
+                {
+                    DrawLoginForm();
+                }
+                else
+                {
+                    DrawBalanceAndRedeemPanel();
+                }
+
+                GUILayout.EndArea();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Excepción en OnGUI(): {ex}");
+            }
+        }
+
+        private void DrawLoginForm()
+        {
+            GUILayout.Label("Email:");
+            _hudEmail = GUILayout.TextField(_hudEmail);
+            GUILayout.Label("Password:");
+            _hudPassword = GUILayout.PasswordField(_hudPassword, '*');
+
+            GUI.enabled = !_isLoggingIn;
+            if (GUILayout.Button(_isLoggingIn ? "Conectando..." : "Login"))
+            {
+                _ = LoginAndInitializeAsync(_hudEmail, _hudPassword);
+            }
+            GUI.enabled = true;
+
+            if (_lastError is not null)
+                GUILayout.Label($"Error: {_lastError}");
+        }
+
+        private void DrawBalanceAndRedeemPanel()
+        {
+            GUILayout.Label($"Jugador #{_playerId}");
+
+            var fisico = _cachedBalance?.FirstOrDefault(b => b.AttributeId == _testAttributeId.Value);
+            GUILayout.Label(fisico is not null
+                ? $"Saldo (attr={_testAttributeId.Value}): {fisico.Balance} pts"
+                : "Saldo: cargando...");
+
+            GUI.enabled = !_isRedeemInFlight;
+            if (GUILayout.Button($"Canjear Paddle Speed Boost ({_testAmount.Value} pts)"))
+            {
+                _ = RedeemPaddleSpeedBoostAsync(_playerId!.Value);
+            }
+            GUI.enabled = true;
+
+            var active = _timedEffects.GetActive().FirstOrDefault(e => e.Mechanic.MmvId == MmvPaddleSpeedBoost);
+            if (active is not null)
+            {
+                var remaining = (active.ExpiresAt - DateTimeOffset.UtcNow).TotalSeconds;
+                GUILayout.Label(remaining > 0 ? $"Boost activo: {remaining:F0}s restantes" : "Boost expirando...");
+            }
+
+            if (_lastError is not null)
+                GUILayout.Label($"Error: {_lastError}");
+        }
+
         /// <summary>
-        /// Ciclo manual de prueba end-to-end: preview -> redeem -> aplicar efecto ->
-        /// trackear expiración. Disparado con TestRedeemKey (default F6) mientras no
-        /// exista un HUD real. Deja logs detallados en cada paso para depuración.
+        /// Ciclo de canje real: preview -> redeem -> aplicar efecto -> trackear
+        /// expiración. Invocado desde el botón del HUD (ya no automático ni por
+        /// tecla — ver historial en versiones anteriores del changelog).
         /// </summary>
-        private async Task TestRedeemPaddleSpeedBoostAsync(int playerId)
+        private async Task RedeemPaddleSpeedBoostAsync(int playerId)
         {
             _isRedeemInFlight = true;
+            _lastError = null;
             try
             {
                 var mechanic = _mechanics.Get(MmvPaddleSpeedBoost);
                 if (mechanic is null)
                 {
-                    Logger.LogError($"mmv={MmvPaddleSpeedBoost} no está en el catálogo cacheado — ¿RefreshAsync corrió bien?");
+                    _lastError = $"mmv={MmvPaddleSpeedBoost} no está en el catálogo cacheado.";
+                    Logger.LogError(_lastError);
                     return;
                 }
 
@@ -279,7 +321,8 @@ namespace RaftLsgMod
                 var preview = await _api.PreviewRedeemAsync(playerId, request);
                 if (preview is null || !preview.CanRedeem)
                 {
-                    Logger.LogWarning($"No se puede canjear: saldo={preview?.CurrentBalance ?? -1}, requerido={_testAmount.Value}.");
+                    _lastError = $"Saldo insuficiente: {preview?.CurrentBalance ?? -1} < {_testAmount.Value}.";
+                    Logger.LogWarning(_lastError);
                     return;
                 }
 
@@ -289,11 +332,10 @@ namespace RaftLsgMod
                 var effectResult = _interpreter.Apply(mechanic);
                 if (!effectResult.Success)
                 {
-                    Logger.LogError($"El efecto se debitó en LSG pero falló al aplicarse en el juego: {effectResult.Warning}");
+                    _lastError = $"Efecto no aplicado: {effectResult.Warning}";
+                    Logger.LogError(_lastError);
                     return;
                 }
-                if (effectResult.Warning is not null)
-                    Logger.LogWarning(effectResult.Warning);
 
                 var duration = _durationResolver.Resolve(mechanic, new EffectContext { PlayerId = playerId });
                 if (duration > TimeSpan.Zero)
@@ -307,10 +349,13 @@ namespace RaftLsgMod
                     });
                     Logger.LogInfo($"Efecto activo por {duration.TotalSeconds}s: {mechanic.Name}.");
                 }
+
+                await RefreshBalanceAsync(playerId);
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Fallo en el ciclo de canje de prueba: {ex}");
+                _lastError = ex.Message;
+                Logger.LogError($"Fallo en el ciclo de canje: {ex}");
             }
             finally
             {
