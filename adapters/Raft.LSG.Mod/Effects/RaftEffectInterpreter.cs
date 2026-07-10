@@ -11,13 +11,13 @@ namespace RaftLsgMod.Effects
     ///          (ver PaddleForcePatch + PaddleSpeedBoostState). Limitación
     ///          host/cliente documentada en PaddleForcePatch.cs.
     ///
-    ///   mmv=67 Loot Luck Boost -> PENDIENTE. Reemplazó a "Debris Scanner"
-    ///          (que no correspondía a ningún sistema real de Raft) el
-    ///          2026-07-03. Aún no se localizó en dnSpy el punto exacto de
-    ///          generación de loot (candidatos: SO_TreasureLootSettings /
-    ///          SO_MysteryPackageLoot.GetRandomItemFromPossibles). Placeholder
-    ///          no-op seguro: el canje se procesa igual en LSG, pero no aplica
-    ///          ningún efecto real todavía — no bloquea v0.2.0 del resto.
+    ///   mmv=67 Loot Luck Boost -> Harmony patch sobre
+    ///          SO_MysteryPackageLoot.GetRandomItemFromPossibles (ver
+    ///          LootLuckPatch + LootLuckBoostState). Redefinido 2026-07-10:
+    ///          GetRandomItemFromPossibles() elige uniforme al azar, sin
+    ///          niveles de rareza que amplificar — el efecto real es una
+    ///          GARANTÍA de ítem (fallback al pool completo) en vez de un
+    ///          "más probabilidad de objetos raros" que el juego no soporta.
     /// </summary>
     internal sealed class RaftEffectInterpreter : ITimedEffectInterpreter
     {
@@ -39,11 +39,15 @@ namespace RaftLsgMod.Effects
 
         public void Revert(TimedEffect effect)
         {
-            if (effect.Mechanic.MmvId == MmvPaddleSpeedBoost)
+            switch (effect.Mechanic.MmvId)
             {
-                PaddleSpeedBoostState.Reset();
+                case MmvPaddleSpeedBoost:
+                    PaddleSpeedBoostState.Reset();
+                    break;
+                case MmvLootLuckBoost:
+                    LootLuckBoostState.Reset();
+                    break;
             }
-            // MmvLootLuckBoost: instantáneo (placeholder), no requiere revert.
         }
 
         private EffectApplicationResult ApplyPaddleSpeedBoost(MechanicDto mechanic)
@@ -61,10 +65,9 @@ namespace RaftLsgMod.Effects
 
         private static EffectApplicationResult ApplyLootLuckBoost()
         {
-            // TODO: implementar cuando se localice el punto real de generación de
-            // loot en dnSpy. No falla para no romper el flujo de redeem.
-            return EffectApplicationResult.OkWithWarning(
-                "Loot Luck Boost: placeholder no-op, pendiente de mecanismo real.");
+            LootLuckBoostState.IsActive = true;
+            // ExpiresAt lo fija el llamador vía TimedEffectTracker, igual que Paddle.
+            return EffectApplicationResult.Ok();
         }
 
         private static float ReadFloat(MechanicDto mechanic, string key, float fallback)

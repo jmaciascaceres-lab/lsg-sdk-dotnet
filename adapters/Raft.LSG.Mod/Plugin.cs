@@ -22,7 +22,7 @@ namespace RaftLsgMod
     {
         private const string PluginGuid = "cl.usach.diinf.lsg.raft";
         private const string PluginName = "LSG Raft Adapter";
-        private const string PluginVersion = "1.0.0";
+        private const string PluginVersion = "1.1.0";
 
         // Confirmado: id_videogame = 71 (db_lsg.videogame, 2026-07-02).
         private const int LsgGameId = 71;
@@ -44,6 +44,8 @@ namespace RaftLsgMod
         private ConfigEntry<bool> _autoLoginOnStart = null!;
         private ConfigEntry<int> _testAttributeId = null!;
         private ConfigEntry<int> _testAmount = null!;
+        private ConfigEntry<int> _lootLuckAttributeId = null!;
+        private ConfigEntry<int> _lootLuckAmount = null!;
 
         private int? _playerId;
         private bool _isRedeemInFlight;
@@ -126,6 +128,10 @@ namespace RaftLsgMod
                 "attribute_id a debitar en el canje (2 = FISICO_BASE, tentativo — confirmar contra /attributes).");
             _testAmount = Config.Bind("LSG Test", "TestAmount", 30,
                 "Monto a canjear al presionar el botón de Paddle Speed Boost en el HUD.");
+            _lootLuckAttributeId = Config.Bind("LSG Test", "LootLuckAttributeId", 4,
+                "attribute_id a debitar en el canje de Loot Luck Boost (4 = MENTAL_BASE, tentativo).");
+            _lootLuckAmount = Config.Bind("LSG Test", "LootLuckAmount", 25,
+                "Monto a canjear al presionar el botón de Loot Luck Boost en el HUD.");
         }
 
         private void MaintenanceTick(object? state)
@@ -270,22 +276,31 @@ namespace RaftLsgMod
             GUILayout.Label($"Jugador #{_playerId}");
 
             var fisico = _cachedBalance?.FirstOrDefault(b => b.AttributeId == _testAttributeId.Value);
+            var mental = _cachedBalance?.FirstOrDefault(b => b.AttributeId == _lootLuckAttributeId.Value);
             GUILayout.Label(fisico is not null
-                ? $"Saldo (attr={_testAttributeId.Value}): {fisico.Balance} pts"
-                : "Saldo: cargando...");
+                ? $"Saldo físico (attr={_testAttributeId.Value}): {fisico.Balance} pts"
+                : "Saldo físico: cargando...");
+            GUILayout.Label(mental is not null
+                ? $"Saldo mental (attr={_lootLuckAttributeId.Value}): {mental.Balance} pts"
+                : "Saldo mental: cargando...");
 
             GUI.enabled = !_isRedeemInFlight;
             if (GUILayout.Button($"Canjear Paddle Speed Boost ({_testAmount.Value} pts)"))
             {
-                _ = RedeemPaddleSpeedBoostAsync(_playerId!.Value);
+                _ = RedeemMechanicAsync(_playerId!.Value, MmvPaddleSpeedBoost, _testAttributeId.Value, _testAmount.Value);
+            }
+            if (GUILayout.Button($"Canjear Loot Luck Boost ({_lootLuckAmount.Value} pts)"))
+            {
+                _ = RedeemMechanicAsync(_playerId!.Value, MmvLootLuckBoost, _lootLuckAttributeId.Value, _lootLuckAmount.Value);
             }
             GUI.enabled = true;
 
-            var active = _timedEffects.GetActive().FirstOrDefault(e => e.Mechanic.MmvId == MmvPaddleSpeedBoost);
-            if (active is not null)
+            foreach (var active in _timedEffects.GetActive())
             {
                 var remaining = (active.ExpiresAt - DateTimeOffset.UtcNow).TotalSeconds;
-                GUILayout.Label(remaining > 0 ? $"Boost activo: {remaining:F0}s restantes" : "Boost expirando...");
+                GUILayout.Label(remaining > 0
+                    ? $"{active.Mechanic.Name}: {remaining:F0}s restantes"
+                    : $"{active.Mechanic.Name}: expirando...");
             }
 
             if (_lastError is not null)
@@ -293,41 +308,41 @@ namespace RaftLsgMod
         }
 
         /// <summary>
-        /// Ciclo de canje real: preview -> redeem -> aplicar efecto -> trackear
-        /// expiración. Invocado desde el botón del HUD (ya no automático ni por
-        /// tecla — ver historial en versiones anteriores del changelog).
+        /// Ciclo de canje real, genérico para cualquier mecánica del catálogo:
+        /// preview -> redeem -> aplicar efecto -> trackear expiración. Invocado
+        /// desde los botones del HUD.
         /// </summary>
-        private async Task RedeemPaddleSpeedBoostAsync(int playerId)
+        private async Task RedeemMechanicAsync(int playerId, int mmvId, int attributeId, int amount)
         {
             _isRedeemInFlight = true;
             _lastError = null;
             try
             {
-                var mechanic = _mechanics.Get(MmvPaddleSpeedBoost);
+                var mechanic = _mechanics.Get(mmvId);
                 if (mechanic is null)
                 {
-                    _lastError = $"mmv={MmvPaddleSpeedBoost} no está en el catálogo cacheado.";
+                    _lastError = $"mmv={mmvId} no está en el catálogo cacheado.";
                     Logger.LogError(_lastError);
                     return;
                 }
 
                 var request = new RedeemRequestDto
                 {
-                    ModifiableMechanicVideogameId = MmvPaddleSpeedBoost,
-                    AttributeId = _testAttributeId.Value,
-                    Amount = _testAmount.Value,
+                    ModifiableMechanicVideogameId = mmvId,
+                    AttributeId = attributeId,
+                    Amount = amount,
                 };
 
                 var preview = await _api.PreviewRedeemAsync(playerId, request);
                 if (preview is null || !preview.CanRedeem)
                 {
-                    _lastError = $"Saldo insuficiente: {preview?.CurrentBalance ?? -1} < {_testAmount.Value}.";
+                    _lastError = $"Saldo insuficiente: {preview?.CurrentBalance ?? -1} < {amount}.";
                     Logger.LogWarning(_lastError);
                     return;
                 }
 
                 var result = await _api.RedeemAsync(playerId, request);
-                Logger.LogInfo($"Redeem OK: ledger_id={result?.PointsLedgerId}, saldo restante={result?.ResultingBalance}.");
+                Logger.LogInfo($"Redeem OK ({mechanic.Name}): ledger_id={result?.PointsLedgerId}, saldo restante={result?.ResultingBalance}.");
 
                 var effectResult = _interpreter.Apply(mechanic);
                 if (!effectResult.Success)

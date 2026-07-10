@@ -171,7 +171,28 @@ precisamente por no tener esta complejidad arquitectónica. Si se agrega un
 nuevo modelo o método al cliente HTTP, usar Newtonsoft.Json — no reintroducir
 `System.Text.Json` en este proyecto.
 
-## Pendientes conocidos (no bloqueantes para M1)
+## Misterio resuelto: `Update()`/`Start()`/`OnGUI()` nunca se ejecutaban (2026-07-10)
+
+**Causa real:** el `GameObject` administrador de BepInEx era destruido por el
+propio juego durante la transición a `MainScene`, justo después de que
+`Awake()`/`OnEnable()` ya habían corrido (por eso esos sí se veían en el log)
+pero antes de la primera oportunidad de `Start()`/`Update()`/`OnGUI()`. Mismo
+patrón documentado en BepInEx/BepInEx#420 y BepInEx/BepInEx#827.
+
+**Fix (sin tocar código):** en `BepInEx/config/BepInEx.cfg`, sección
+`[Preloader]`, cambiar `HideManagerGameObject = false` → `true`. Con esto:
+- `OnGUI()` corre normalmente — el HUD es visible en pantalla.
+- Los workarounds con `System.Threading.Timer` (mantenimiento periódico)
+  siguen funcionando y no hace falta revertirlos — son robustos de todas
+  formas y no dependen de que el ciclo de vida de Unity funcione.
+
+**v1.0.0 validado en juego real (2026-07-10):** login interactivo vía HUD,
+saldo mostrado y refrescado, canje de Paddle Speed Boost disparado desde el
+botón del HUD, efecto aplicado (confirmado con logs objetivos de
+`PaddleForcePatch`), y contador de tiempo restante en pantalla — ciclo
+completo end-to-end.
+
+## Pendientes conocidos
 
 - `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una
   iteración futura debe parsear el detalle por evento (`SYNCED` /

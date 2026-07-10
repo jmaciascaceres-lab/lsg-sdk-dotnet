@@ -35,7 +35,7 @@ cambios en curso de otro juego.
 
 | Adaptador | Cluster | Estado |
 |---|---|---|
-| `Raft.LSG.Mod` | BEPINEX | v1.0.0-rc1 — login interactivo (HUD OnGUI) + saldo + canje real de Paddle Speed Boost, verificado end-to-end en juego. `Loot Luck Boost` sigue placeholder (falta ubicar en dnSpy el sistema real de loot). Pendiente: confirmar que `OnGUI()` sí se ejecuta (mismo riesgo que `Update()`/`Start()`, no confirmado aún en juego real) |
+| `Raft.LSG.Mod` | BEPINEX | **v1.1.0 — CERRADO.** Login interactivo, HUD, saldo, ambas mecánicas (Paddle Speed Boost + Loot Luck Boost, redefinido como garantía de ítem) validadas con efecto real en juego. Pendiente opcional: estilizado del HUD |
 | `Valheim.LSG.Mod` | BEPINEX | No iniciado |
 | `Subnautica.LSG.Mod` | BEPINEX | No iniciado |
 | `VRising.LSG.Mod` | BEPINEX | No iniciado |
