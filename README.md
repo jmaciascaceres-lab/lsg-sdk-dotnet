@@ -1,6 +1,6 @@
 # LSG .NET SDK (lsg-sdk-dotnet)
 
-Versión: v1.1.0
+Versión: v1.1.0 (2026-07-10)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta
 este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
