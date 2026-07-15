@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Ver explicación completa en adapters/Raft.LSG.Mod/ILRepack.targets — mismo
+    patrón exacto. Resumen: este archivo reemplaza el target automático de
+    ILRepack.Lib.MSBuild.Task (que si no se sobreescribe, corre en paralelo al
+    nuestro y choca por "Duplicate type"). Salida: Valheim.LSG.Mod.merged.dll —
+    desplegar SOLO ese archivo a BepInEx/plugins/, no el .dll original.
+  -->
+
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <LsgMergeAssemblies Include="$(TargetPath)" />
+      <LsgMergeAssemblies Include="$(TargetDir)LSG.SDK.Core.dll" />
+      <LsgMergeAssemblies Include="$(TargetDir)Newtonsoft.Json.dll" />
+    </ItemGroup>
+    <ILRepack
+      Parallel="true"
+      Internalize="true"
+      DebugInfo="false"
+      InputAssemblies="@(LsgMergeAssemblies)"
+      OutputFile="$(TargetDir)Valheim.LSG.Mod.merged.dll"
+      LibraryPath="$(TargetDir);$(BEPINEX_PATH)\core;$(VALHEIM_MANAGED_PATH)"
+      TargetKind="Dll" />
+  </Target>
+
+</Project>

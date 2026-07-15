@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Rutas locales de máquina: ver valheim.local.props.example. Si "valheim.local.props"
+       no existe, cae de vuelta a las variables de entorno VALHEIM_MANAGED_PATH/BEPINEX_PATH. -->
+  <Import Project="valheim.local.props" Condition="Exists('valheim.local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ValheimLsgMod</RootNamespace>
+    <AssemblyName>Valheim.LSG.Mod</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>Adaptador LSG para Valheim sobre BepInEx/Harmony. Cluster: BEPINEX.</Description>
+    <!-- Ver nota completa en Raft.LSG.Mod.csproj: sin esto, el deploy queda
+         incompleto y el plugin falla con "could not be instantiated". -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LSG.SDK.Core\LSG.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- PENDIENTE CONFIRMAR (a diferencia de Raft, que sí se verificó): Valheim
+         corre en Unity 2020.x/IL2CPP en su build más reciente, o en Mono en
+         builds legacy — depende de la versión instalada. VERIFICAR con dnSpy
+         abriendo Assembly-CSharp.dll directo (si abre sin pedir "unhollow" es
+         Mono; si dnSpy no puede abrirlo normalmente, es IL2CPP y este .csproj
+         necesita ajustarse a BepInEx 6.x IL2CPP antes de continuar).
+
+         Referencias resueltas contra la carpeta local de instalación del juego.
+         Definir VALHEIM_MANAGED_PATH apuntando a
+         "...\Valheim\valheim_Data\Managed" (o el nombre real de la carpeta Data
+         — confirmar, Valheim no siempre usa "<Juego>_Data" literal). -->
+    <Reference Include="assembly_valheim">
+      <HintPath>$(VALHEIM_MANAGED_PATH)\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(VALHEIM_MANAGED_PATH)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(VALHEIM_MANAGED_PATH)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(VALHEIM_MANAGED_PATH)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(VALHEIM_MANAGED_PATH)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BEPINEX_PATH)\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(BEPINEX_PATH)\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ver ILRepack.targets (archivo aparte) — NO agregar un <Target> inline
+         aquí, causa doble ejecución y "Duplicate type" (lección de Raft). -->
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34" />
+  </ItemGroup>
+
+</Project>

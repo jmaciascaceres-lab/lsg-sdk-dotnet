@@ -1,0 +1,8 @@
+<Project>
+  <!-- Copiar como "valheim.local.props" (sin ".example") y completar con tus
+       rutas reales. No se versiona (ver .gitignore). -->
+  <PropertyGroup>
+    <VALHEIM_MANAGED_PATH>C:\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed</VALHEIM_MANAGED_PATH>
+    <BEPINEX_PATH>C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx</BEPINEX_PATH>
+  </PropertyGroup>
+</Project>

@@ -2,3 +2,4 @@ bin/
 obj/
 *.user
 raft.local.props
+valheim.local.props

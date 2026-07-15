@@ -12,22 +12,22 @@ using LSG.SDK.Core.Config;
 using LSG.SDK.Core.Mechanics;
 using LSG.SDK.Core.Models;
 using LSG.SDK.Core.Offline;
-using RaftLsgMod.Effects;
+using ValheimLsgMod.Effects;
 using UnityEngine;
 
-namespace RaftLsgMod
+namespace ValheimLsgMod
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     public sealed class Plugin : BaseUnityPlugin
     {
-        private const string PluginGuid = "cl.usach.diinf.lsg.raft";
-        private const string PluginName = "LSG Raft Adapter";
-        private const string PluginVersion = "1.1.1";
+        private const string PluginGuid = "cl.usach.diinf.lsg.valheim";
+        private const string PluginName = "LSG Valheim Adapter";
+        private const string PluginVersion = "0.2.0";
 
-        // Confirmado: id_videogame = 71 (db_lsg.videogame, 2026-07-02).
-        private const int LsgGameId = 71;
-        private const int MmvPaddleSpeedBoost = 66;
-        private const int MmvLootLuckBoost = 67;
+        // Confirmado: id_videogame = 17 (db_lsg.videogame, cluster BEPINEX).
+        private const int LsgGameId = 17;
+        private const int MmvStaminaRegenBoost = 60;
+        private const int MmvComfortBoost = 61;
 
         private LsgConfig _config = null!;
         private LsgAuthClient _auth = null!;
@@ -36,7 +36,7 @@ namespace RaftLsgMod
         private OfflineQueue _offlineQueue = null!;
         private TimedEffectTracker _timedEffects = null!;
         private IDurationResolver _durationResolver = null!;
-        private RaftEffectInterpreter _interpreter = null!;
+        private ValheimEffectInterpreter _interpreter = null!;
         private Harmony _harmony = null!;
 
         private ConfigEntry<string> _lsgEmail = null!;
@@ -44,8 +44,8 @@ namespace RaftLsgMod
         private ConfigEntry<bool> _autoLoginOnStart = null!;
         private ConfigEntry<int> _testAttributeId = null!;
         private ConfigEntry<int> _testAmount = null!;
-        private ConfigEntry<int> _lootLuckAttributeId = null!;
-        private ConfigEntry<int> _lootLuckAmount = null!;
+        private ConfigEntry<int> _comfortAttributeId = null!;
+        private ConfigEntry<int> _comfortAmount = null!;
 
         private int? _playerId;
         private bool _isRedeemInFlight;
@@ -76,7 +76,7 @@ namespace RaftLsgMod
             _offlineQueue = new OfflineQueue(_api, _config);
             _timedEffects = new TimedEffectTracker();
             _durationResolver = new PassthroughDurationResolver();
-            _interpreter = new RaftEffectInterpreter();
+            _interpreter = new ValheimEffectInterpreter();
 
             _hudEmail = _lsgEmail.Value;
             _hudPassword = _lsgPassword.Value;
@@ -117,7 +117,7 @@ namespace RaftLsgMod
         {
             // ADVERTENCIA DE SEGURIDAD (aceptado para esta fase de pruebas manuales):
             // si se completa aquí, la contraseña queda en texto plano en
-            // BepInEx/config/cl.usach.diinf.lsg.raft.cfg. El HUD (OnGUI) permite
+            // BepInEx/config/cl.usach.diinf.lsg.valheim.cfg. El HUD (OnGUI) permite
             // loguearse sin tocar este archivo; estos campos solo sirven como
             // atajo opcional para pruebas repetidas. NO usar cuenta de producción.
             _lsgEmail = Config.Bind("LSG Credentials", "Email", "",
@@ -130,16 +130,16 @@ namespace RaftLsgMod
             _testAttributeId = Config.Bind("LSG Test", "TestAttributeId", 2,
                 "attribute_id a debitar en el canje (2 = FISICO_BASE, tentativo — confirmar contra /attributes).");
             _testAmount = Config.Bind("LSG Test", "TestAmount", 30,
-                "Monto a canjear al presionar el botón de Paddle Speed Boost en el HUD.");
-            _lootLuckAttributeId = Config.Bind("LSG Test", "LootLuckAttributeId", 4,
-                "attribute_id a debitar en el canje de Loot Luck Boost (4 = MENTAL_BASE, tentativo).");
-            _lootLuckAmount = Config.Bind("LSG Test", "LootLuckAmount", 25,
-                "Monto a canjear al presionar el botón de Loot Luck Boost en el HUD.");
+                "Monto a canjear al presionar el botón de Stamina Regen Boost en el HUD.");
+            _comfortAttributeId = Config.Bind("LSG Test", "ComfortAttributeId", 4,
+                "attribute_id a debitar en el canje de Comfort Boost (4 = MENTAL_BASE, tentativo).");
+            _comfortAmount = Config.Bind("LSG Test", "ComfortAmount", 25,
+                "Monto a canjear al presionar el botón de Comfort Boost en el HUD.");
 
             _hudX = Config.Bind("LSG HUD", "HudX", 10,
                 "Posición X (píxeles) de la esquina superior izquierda del HUD de LSG.");
-            _hudY = Config.Bind("LSG HUD", "HudY", 10,
-                "Posición Y (píxeles). Ajustar si solapa con el HUD nativo del juego.");
+            _hudY = Config.Bind("LSG HUD", "HudY", 160,
+                "Posición Y (píxeles). Default 160 (no 10) para no solapar las ranuras 1-3 del hotbar de Valheim.");
         }
 
         private void MaintenanceTick(object? state)
@@ -241,7 +241,7 @@ namespace RaftLsgMod
                     Logger.LogInfo("OnGUI() ejecutándose (heartbeat) — el HUD debería ser visible en pantalla.");
                 }
 
-                GUI.Box(_hudRect, "LSG - Raft Adapter");
+                GUI.Box(_hudRect, "LSG - Valheim Adapter");
                 GUILayout.BeginArea(new Rect(_hudRect.x + 10, _hudRect.y + 25, _hudRect.width - 20, _hudRect.height - 35));
 
                 if (!_playerId.HasValue)
@@ -284,22 +284,22 @@ namespace RaftLsgMod
             GUILayout.Label($"Jugador #{_playerId}");
 
             var fisico = _cachedBalance?.FirstOrDefault(b => b.AttributeId == _testAttributeId.Value);
-            var mental = _cachedBalance?.FirstOrDefault(b => b.AttributeId == _lootLuckAttributeId.Value);
+            var mental = _cachedBalance?.FirstOrDefault(b => b.AttributeId == _comfortAttributeId.Value);
             GUILayout.Label(fisico is not null
                 ? $"Saldo físico (attr={_testAttributeId.Value}): {fisico.Balance} pts"
                 : "Saldo físico: cargando...");
             GUILayout.Label(mental is not null
-                ? $"Saldo mental (attr={_lootLuckAttributeId.Value}): {mental.Balance} pts"
+                ? $"Saldo mental (attr={_comfortAttributeId.Value}): {mental.Balance} pts"
                 : "Saldo mental: cargando...");
 
             GUI.enabled = !_isRedeemInFlight;
-            if (GUILayout.Button($"Canjear Paddle Speed Boost ({_testAmount.Value} pts)"))
+            if (GUILayout.Button($"Canjear Stamina Regen Boost ({_testAmount.Value} pts)"))
             {
-                _ = RedeemMechanicAsync(_playerId!.Value, MmvPaddleSpeedBoost, _testAttributeId.Value, _testAmount.Value);
+                _ = RedeemMechanicAsync(_playerId!.Value, MmvStaminaRegenBoost, _testAttributeId.Value, _testAmount.Value);
             }
-            if (GUILayout.Button($"Canjear Loot Luck Boost ({_lootLuckAmount.Value} pts)"))
+            if (GUILayout.Button($"Canjear Comfort Boost ({_comfortAmount.Value} pts)"))
             {
-                _ = RedeemMechanicAsync(_playerId!.Value, MmvLootLuckBoost, _lootLuckAttributeId.Value, _lootLuckAmount.Value);
+                _ = RedeemMechanicAsync(_playerId!.Value, MmvComfortBoost, _comfortAttributeId.Value, _comfortAmount.Value);
             }
             GUI.enabled = true;
 

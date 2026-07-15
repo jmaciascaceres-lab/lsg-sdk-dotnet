@@ -1,6 +1,6 @@
 # LSG SDK Core
 
-Versión: v1.1.0 (2026-07-10)
+Versión: v1.1.1 (2026-07-15)
 
 SDK-core reutilizable para conectar mods de videojuegos con el ecosistema LifeSync-Games (`lsg-auth` + `lsg-core-api`). Diseñado para el **cluster BEPINEX** (Core Keeper, Valheim, Subnautica, VRising) pero reusable en cualquier cluster C# (SMAPI, tModLoader) sin cambios.
 
@@ -24,16 +24,18 @@ LSG.SDK.Core (este repo)
   ├── Offline → OfflineQueue
   └── Models → DTOs
 
-CoreKeeper.LSG.Mod (repo aparte, referencia este SDK)
-  └── CoreKeeperEffectInterpreter : IEffectInterpreter
-        - Mining Speed Boost (mmv=58) → Harmony patch sobre MiningSpeed
-        - Reveal Nearby Map (mmv=59) → llamada a MapReveal API del juego
+Raft.LSG.Mod (repo aparte, referencia este SDK) - CERRADO v1.1.1
+  └── RaftEffectInterpreter : ITimedEffectInterpreter
+        - Paddle Speed Boost (mmv=66) → Harmony patch sobre Paddle.PaddlePaddle
+        - Loot Luck Boost (mmv=67) → Harmony patch sobre SO_MysteryPackageLoot.GetRandomItemFromPossibles (redefinido como garantía de ítem, no "más rareza" - el juego no soporta eso)
 
-Valheim.LSG.Mod (repo aparte)
-  └── ValheimEffectInterpreter : IEffectInterpreter ...
+Valheim.LSG.Mod (repo aparte) - validado end-to-end v0.2.0
+  └── ValheimEffectInterpreter : ITimedEffectInterpreter
+        - Stamina Regen Boost (mmv=60) → SEMan.AddStatusEffect (sistema NATIVO, sin Harmony)
+        - Comfort Boost (mmv=61) → Harmony patch sobre SE_Rested.CalculateComfortLevel
 ```
 
-## Contrato de referencia - mecánicas mínimas cargadas
+## Contrato de referencia - mecánicas mínimas cargadas (2026-07-02)
 
 | Juego (id) | mmv_id | Nombre | Tipo | Dimensión objetivo |
 |---|---|---|---|---|
@@ -132,13 +134,13 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 
 **Limitación conocida:** `TimedEffectTracker` es en memoria - si el proceso del mod se reinicia (crash, alt-F4), los efectos activos se pierden sin revertirse. Aceptable para v1 (impacto: el jugador conserva el buff hasta el próximo reinicio en vez de perderlo a tiempo). Si se vuelve un problema real, la solución es persistir `TimedEffect` en un archivo local del adaptador y rehidratar el tracker en `Awake()`.
 
-## Nota de compatibilidad con Mono viejo - resuelta migrando a Newtonsoft.Json
+## Nota de compatibilidad con Mono viejo - resuelta migrando a Newtonsoft.Json (2026-07-05)
 
-`System.Text.Json` moderno (`DeserializeAsync`/`ValueTask`, `IAsyncDisposable`,`JsonTypeInfo<T>`, `Utf8JsonWriter`) produjo **cinco fallas distintas** en el Mono de BepInEx 5.4.x (CLR 4.0.30319, era .NET Framework 4.x) a lo largo del desarrollo - todas por la misma causa raíz: el despacho genérico virtual complejo de esa librería no es compatible con el JIT de ese runtime tan viejo. No era un problema de ILRepack ni de conflicto de ensamblados.
+`System.Text.Json` moderno (`DeserializeAsync`/`ValueTask`, `IAsyncDisposable`, `JsonTypeInfo<T>`, `Utf8JsonWriter`) produjo **cinco fallas distintas** en el Mono de BepInEx 5.4.x (CLR 4.0.30319, era .NET Framework 4.x) a lo largo del desarrollo - todas por la misma causa raíz: el despacho genérico virtual complejo de esa librería no es compatible con el JIT de ese runtime tan viejo. No era un problema de ILRepack ni de conflicto de ensamblados.
 
 **Se migró todo el SDK-core a `Newtonsoft.Json`** (`JsonConvert.SerializeObject`/`DeserializeObject`, atributos `[JsonProperty]`, `JToken`/`JObject` en vez de `JsonElement`) - el estándar de facto en modding BepInEx/Unity/Mono precisamente por no tener esta complejidad arquitectónica. Si se agrega un nuevo modelo o método al cliente HTTP, usar Newtonsoft.Json - no reintroducir `System.Text.Json` en este proyecto.
 
-## Misterio resuelto: `Update()`/`Start()`/`OnGUI()` nunca se ejecutaban
+## Misterio resuelto: `Update()`/`Start()`/`OnGUI()` nunca se ejecutaban (2026-07-10)
 
 **Causa real:** el `GameObject` administrador de BepInEx era destruido por el propio juego durante la transición a `MainScene`, justo después de que `Awake()`/`OnEnable()` ya habían corrido (por eso esos sí se veían en el log) pero antes de la primera oportunidad de `Start()`/`Update()`/`OnGUI()`. Mismo patrón documentado en BepInEx/BepInEx#420 y BepInEx/BepInEx#827.
 
@@ -146,22 +148,12 @@ tracker.OnExpired += effect => interpreter.Revert(effect);
 - `OnGUI()` corre normalmente - el HUD es visible en pantalla.
 - Los workarounds con `System.Threading.Timer` (mantenimiento periódico) siguen funcionando y no hace falta revertirlos - son robustos de todas formas y no dependen de que el ciclo de vida de Unity funcione.
 
-**v1.0.0 validado en juego real:** login interactivo vía HUD, saldo mostrado y refrescado, canje de Paddle Speed Boost disparado desde el botón del HUD, efecto aplicado (confirmado con logs objetivos de `PaddleForcePatch`), y contador de tiempo restante en pantalla - ciclo completo end-to-end.
+**v1.0.0 validado en juego real (2026-07-10):** login interactivo vía HUD, saldo mostrado y refrescado, canje de Paddle Speed Boost disparado desde el botón del HUD, efecto aplicado (confirmado con logs objetivos de `PaddleForcePatch`), y contador de tiempo restante en pantalla - ciclo completo end-to-end.
 
 ## Pendientes conocidos
 
 - `OfflineQueue.FlushAsync` trata la respuesta 207 como éxito global; una iteración futura debe parsear el detalle por evento (`SYNCED` / `DUPLICATE` / `REJECTED`) y re-encolar solo los rechazados por causa transitoria.
 - `IEffectInterpreter` no define aún un mecanismo de rollback si `Apply()` falla después de un `redeem` exitoso (puntos ya debitados, efecto no aplicado). Decisión pendiente: ¿reintento local, o endpoint de compensación en el core? A discutir antes de M3.
-
-## Changelog
-
-### v1.1.0 (2026-07-10)
-
-- Adaptador de Raft completado:
-  - Login interactivo y HUD con balance en tiempo real.
-  - Mecánicas implementadas: Paddle Speed Boost y Loot Luck Boost (garantía de ítem).
-  - Catch-up automático de eventos offline.
-- Refactor de LSG SDK Core: migración a Newtonsoft.Json (build limpio).
 
 ## Referencias
 
