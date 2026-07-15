@@ -1,6 +1,6 @@
 # Setup - Raft.LSG.Mod
 
-Versión: v0.3.0 (2026-07-10)
+Versión: v1.1.1 (2026-07-10)
 
 ## Confirmado (2026-07-02)
 
