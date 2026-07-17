@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Ver explicación completa en adapters/Raft.LSG.Mod/ILRepack.targets.
+       Mismo patrón: este archivo reemplaza el target automático del paquete
+       para evitar la doble ejecución ("Duplicate type"). -->
+
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <LsgMergeAssemblies Include="$(TargetPath)" />
+      <LsgMergeAssemblies Include="$(TargetDir)LSG.SDK.Core.dll" />
+      <LsgMergeAssemblies Include="$(TargetDir)Newtonsoft.Json.dll" />
+    </ItemGroup>
+    <ILRepack
+      Parallel="true"
+      Internalize="true"
+      DebugInfo="false"
+      InputAssemblies="@(LsgMergeAssemblies)"
+      OutputFile="$(TargetDir)VRising.LSG.Mod.merged.dll"
+      LibraryPath="$(TargetDir);$(BEPINEX_PATH)\core;$(VRISING_INTEROP_PATH)"
+      TargetKind="Dll" />
+  </Target>
+
+</Project>

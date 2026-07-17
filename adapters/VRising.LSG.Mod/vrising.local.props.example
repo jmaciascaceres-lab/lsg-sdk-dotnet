@@ -1,0 +1,8 @@
+<Project>
+  <!-- Copiar como "vrising.local.props" (sin ".example") y completar con tus
+       rutas reales. No se versiona (ver .gitignore). -->
+  <PropertyGroup>
+    <BEPINEX_PATH>C:\Program Files (x86)\Steam\steamapps\common\VRising\BepInEx</BEPINEX_PATH>
+    <VRISING_INTEROP_PATH>C:\Program Files (x86)\Steam\steamapps\common\VRising\BepInEx\interop</VRISING_INTEROP_PATH>
+  </PropertyGroup>
+</Project>

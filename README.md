@@ -47,7 +47,7 @@ Raft y Valheim ya resolvieron (y documentaron) los mismos gotchas de entorno. Cu
 | `Raft.LSG.Mod` | BEPINEX | **v1.1.1 - CERRADO.** Login interactivo, HUD (posición configurable), saldo, ambas mecánicas (Paddle Speed Boost + Loot Luck Boost, redefinido como garantía de ítem) validadas con efecto real en juego, verificado con logs objetivos. |
 | `Valheim.LSG.Mod` | BEPINEX | **v0.2.0 - validado end-to-end en juego real.** Stamina Regen Boost vía `SEMan` nativo (sin Harmony), Comfort Boost vía Harmony `Postfix`, ambos confirmados con logs objetivos. HUD reposicionado para no solapar el hotbar. |
 | `Subnautica.LSG.Mod` | BEPINEX | No iniciado |
-| `VRising.LSG.Mod` | BEPINEX | No iniciado |
+| `VRising.LSG.Mod` | BEPINEX (**IL2CPP**, no Mono) | Scaffold compilable (`BasePlugin`, .NET 6). Diseño de ambas mecánicas confirmado sin Harmony. **Pendiente bloqueante:** resolución de `Entity` del jugador (`VWorld.TryGetTargetPlayerEntity`) — ver `SETUP.md` |
 | `StardewValley.LSG.Mod` | SMAPI | No iniciado |
 | `Terraria.LSG.Mod` | TMODLOADER | No iniciado |
 | ~~`CoreKeeper.LSG.Mod`~~ | ~~BEPINEX~~ | **Archivado** (`adapters/_archived/`) - descartado por infactibilidad de modding, ver `ARCHIVED.md`. Reemplazado por Raft. |

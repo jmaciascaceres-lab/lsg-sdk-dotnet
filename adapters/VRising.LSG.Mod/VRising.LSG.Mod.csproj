@@ -1,0 +1,100 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Rutas locales de máquina: ver vrising.local.props.example -->
+  <Import Project="vrising.local.props" Condition="Exists('vrising.local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <!-- IL2CPP: BepInEx.Unity.IL2CPP corre sobre .NET 6, no netstandard2.1 como
+         Raft/Valheim (Mono). Confirmado en el log de arranque: "Runtime
+         information: .NET 6.0.7". -->
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>VRisingLsgMod</RootNamespace>
+    <AssemblyName>VRising.LSG.Mod</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>Adaptador LSG para VRising sobre BepInEx 6.x IL2CPP. Cluster: BEPINEX.</Description>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LSG.SDK.Core\LSG.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Runtime fijo de BepInEx (carpeta BepInEx\core\, NO interop\) -->
+    <Reference Include="BepInEx.Core">
+      <HintPath>$(BEPINEX_PATH)\core\BepInEx.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx.Unity.Common">
+      <HintPath>$(BEPINEX_PATH)\core\BepInEx.Unity.Common.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx.Unity.IL2CPP">
+      <HintPath>$(BEPINEX_PATH)\core\BepInEx.Unity.IL2CPP.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(BEPINEX_PATH)\core\Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BEPINEX_PATH)\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Ensamblados generados por BepInEx/Cpp2IL (carpeta BepInEx\interop\,
+         NO los "dummy" de Il2CppDumper — esos solo sirven para dnSpy). -->
+    <!-- Il2Cppmscorlib: tipos base (System.Object, ValueType, etc.) propios de
+         IL2CPP — TODO proyecto que use tipos generados por Il2CppInterop lo
+         necesita, no es específico de nuestro código (error CS0012 lo confirma
+         explícitamente por su nombre). -->
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(VRISING_INTEROP_PATH)\Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Entities">
+      <HintPath>$(VRISING_INTEROP_PATH)\Unity.Entities.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Collections">
+      <HintPath>$(VRISING_INTEROP_PATH)\Unity.Collections.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(VRISING_INTEROP_PATH)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- ProjectM: repartido en ~25-30 ensamblados (a diferencia de Raft/Valheim,
+         todo en un único Assembly-CSharp.dll). Referenciamos los confirmados
+         como relevantes para Player/SE_Stats/BuffUtility/Blood; de más no
+         rompe nada, referenciar de menos sí. -->
+    <Reference Include="ProjectM">
+      <HintPath>$(VRISING_INTEROP_PATH)\ProjectM.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ProjectM.Shared">
+      <HintPath>$(VRISING_INTEROP_PATH)\ProjectM.Shared.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ProjectM.Gameplay.Systems">
+      <HintPath>$(VRISING_INTEROP_PATH)\ProjectM.Gameplay.Systems.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Stunlock.Core">
+      <HintPath>$(VRISING_INTEROP_PATH)\Stunlock.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ver ILRepack.targets — mismo patrón que Raft/Valheim: fusiona solo
+         LSG.SDK.Core.dll + Newtonsoft.Json.dll. La fusión de ensamblados
+         .NET normales es independiente del puente IL2CPP en tiempo de
+         ejecución, así que este mecanismo sigue funcionando igual. -->
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34" />
+  </ItemGroup>
+
+</Project>
