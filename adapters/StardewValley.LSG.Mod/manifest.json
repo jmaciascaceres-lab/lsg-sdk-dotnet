@@ -1,0 +1,11 @@
+{
+  "Name": "LSG StardewValley Adapter",
+  "Author": "LifeSync-Games",
+  "Version": "0.1.0",
+  "Description": "Adaptador LSG para Stardew Valley sobre SMAPI. Cluster: SMAPI. game_id=12.",
+  "UniqueID": "cl.usach.diinf.lsg.stardewvalley",
+  "EntryDll": "StardewValley.LSG.Mod.dll",
+  "MinimumApiVersion": "4.0.0",
+  "Dependencies": [],
+  "UpdateKeys": []
+}

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <!-- SMAPI 4.x (compatible con Stardew Valley 1.6) corre sobre .NET 6 -->
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>StardewValleyLsgMod</RootNamespace>
+    <AssemblyName>StardewValley.LSG.Mod</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>Adaptador LSG para Stardew Valley sobre SMAPI. Cluster: SMAPI. game_id=12.</Description>
+    <EnableHarmony>false</EnableHarmony>
+    <!-- Cambiar a true solo si terminamos necesitando Harmony (a diferencia
+         de BepInEx, en SMAPI hace falta declararlo explícito aquí para que
+         ModBuildConfig referencie 0Harmony.dll). -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LSG.SDK.Core\LSG.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Pathoschild.Stardew.ModBuildConfig: resuelve TODAS las referencias al
+         juego (StardewValley.dll, StardewModdingAPI.dll, MonoGame/xTile,
+         etc.) automáticamente detectando la instalación local — a diferencia
+         de BepInEx/IL2CPP, no hay que listar HintPath manualmente para cada
+         ensamblado. También copia el mod compilado a la carpeta Mods/ del
+         juego solo con `dotnet build`, sin paso de "copy" manual. -->
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.2" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
 # LSG .NET SDK (lsg-sdk-dotnet)
 
-Versión: v1.1.1 (2026-07-15)
+Versión: v1.2.0 (2026-08-31)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 
@@ -23,6 +23,7 @@ lsg-sdk-dotnet/
 └── adapters/
     ├── Raft.LSG.Mod/ ← cerrado, v1.1.1 (plantilla de referencia)
     ├── Valheim.LSG.Mod/ ← validado end-to-end, v0.2.0
+    ├── StardewValley.LSG.Mod/ ← validado end-to-end, v0.1.0
     └── _archived/
         └── CoreKeeper.LSG.Mod/ ← descartado, ver ARCHIVED.md
 ```
@@ -46,9 +47,9 @@ Raft y Valheim ya resolvieron (y documentaron) los mismos gotchas de entorno. Cu
 |---|---|---|
 | `Raft.LSG.Mod` | BEPINEX | **v1.1.1 - CERRADO.** Login interactivo, HUD (posición configurable), saldo, ambas mecánicas (Paddle Speed Boost + Loot Luck Boost, redefinido como garantía de ítem) validadas con efecto real en juego, verificado con logs objetivos. |
 | `Valheim.LSG.Mod` | BEPINEX | **v0.2.0 - validado end-to-end en juego real.** Stamina Regen Boost vía `SEMan` nativo (sin Harmony), Comfort Boost vía Harmony `Postfix`, ambos confirmados con logs objetivos. HUD reposicionado para no solapar el hotbar. |
-| `Subnautica.LSG.Mod` | BEPINEX | No iniciado |
+| `Subnautica.LSG.Mod` | BEPINEX | **Pausado** (despriorizado) — se prioriza StardewValley y Terraria primero |
 | `VRising.LSG.Mod` | BEPINEX (**IL2CPP**, servidor como proceso separado) | **PAUSADO.** Compila, despliega y corre en juego real (login/catálogo/redeem confirmados con saldo real). Diseño de ambas mecánicas resuelto sin Harmony. Bloqueado por un crash nativo (`AccessViolationException`) en `EntityManager.CreateEntityQuery` al resolver la `Entity` del jugador — curva de integración (IL2CPP + arquitectura de dos procesos) desproporcionada frente a Raft/Valheim. Se prioriza el resto del catálogo. Ver `SETUP.md` para retomarlo |
-| `StardewValley.LSG.Mod` | SMAPI | No iniciado |
+| `StardewValley.LSG.Mod` | SMAPI | **Validado en juego real** (sin ninguna ronda de corrección — primer adaptador así). Speed Buff (mmv=77) y Mining XP (mmv=84) confirmados con efecto real y logs objetivos (`ledger_id` reales). 9 mecánicas más del catálogo quedan pendientes con el mismo patrón. Ver `SETUP.md` |
 | `Terraria.LSG.Mod` | TMODLOADER | No iniciado |
 | ~~`CoreKeeper.LSG.Mod`~~ | ~~BEPINEX~~ | **Archivado** (`adapters/_archived/`) - descartado por infactibilidad de modding, ver `ARCHIVED.md`. Reemplazado por Raft. |
 
@@ -57,6 +58,13 @@ Raft y Valheim ya resolvieron (y documentaron) los mismos gotchas de entorno. Cu
 Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargadas, el diseño de `IEffectInterpreter`, y el historial de incompatibilidades resueltas (Mono/System.Text.Json).
 
 ## Changelog
+
+### v1.2.0 (2026-09-01)
+
+- Adaptador de Stardew Valley completado:
+  - Login interactivo y HUD con balance en tiempo real.
+  - Mecánicas implementadas: Speed Buff y Mining XP.
+  - Catch-up automático de eventos offline.
 
 ### v1.1.1 (2026-07-15)
 
