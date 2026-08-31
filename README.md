@@ -23,6 +23,8 @@ lsg-sdk-dotnet/
 └── adapters/
     ├── Raft.LSG.Mod/ ← cerrado, v1.1.1 (plantilla de referencia)
     ├── Valheim.LSG.Mod/ ← validado end-to-end, v0.2.0
+    ├── StardewValley.LSG.Mod/ ← validado end-to-end, v0.1.0
+    ├── Terraria.LSG.Mod/ ← validado end-to-end, v0.2.0
     └── _archived/
         ├── CoreKeeper.LSG.Mod/ ← descartado, ver ARCHIVED.md
         └── VRising.LSG.Mod/    ← archivado, ver ARCHIVED.md (bloqueado por crash nativo IL2CPP)
