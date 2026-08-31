@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- IMPORTANTE: este archivo es un RESPALDO versionado en el repo.
+	     El proyecto real y compilable vive en:
+	       Documents\My Games\Terraria\tModLoader\ModSources\LSGTerrariaMod\
+	     porque el Import de abajo usa ruta relativa a la instalación de
+	     tModLoader (a diferencia de Raft/Valheim/VRising/StardewValley, que
+	     sí se compilan directo desde este repo). Ver SETUP.md. -->
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+
+	</PropertyGroup>
+
+	<!-- References -->
+	<ItemGroup>
+		<!-- Referencia SIMPLE y robusta: copiar la carpeta src\LSG.SDK.Core\
+		     completa (del repo) DENTRO de ModSources\LSGTerrariaMod\, como
+		     subcarpeta local del propio proyecto. Así no depende de rutas
+		     relativas frágiles entre dos carpetas de Documentos distintas
+		     (una por juego, con nombre/ubicación que puede variar por máquina). -->
+		<ProjectReference Include="LSG.SDK.Core\LSG.SDK.Core.csproj" />
+	</ItemGroup>
+</Project>

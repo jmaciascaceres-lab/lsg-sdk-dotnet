@@ -1,6 +1,6 @@
 # LSG .NET SDK (lsg-sdk-dotnet)
 
-Versión: v1.2.0 (2026-08-31)
+Versión: v1.2.0 (2026-09-01)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 
@@ -24,6 +24,7 @@ lsg-sdk-dotnet/
     ├── Raft.LSG.Mod/ ← cerrado, v1.1.1 (plantilla de referencia)
     ├── Valheim.LSG.Mod/ ← validado end-to-end, v0.2.0
     ├── StardewValley.LSG.Mod/ ← validado end-to-end, v0.1.0
+    ├── Terraria.LSG.Mod/ ← validado end-to-end, v0.2.0
     └── _archived/
         └── CoreKeeper.LSG.Mod/ ← descartado, ver ARCHIVED.md
 ```
@@ -50,7 +51,7 @@ Raft y Valheim ya resolvieron (y documentaron) los mismos gotchas de entorno. Cu
 | `Subnautica.LSG.Mod` | BEPINEX | **Pausado** (despriorizado) — se prioriza StardewValley y Terraria primero |
 | `VRising.LSG.Mod` | BEPINEX (**IL2CPP**, servidor como proceso separado) | **PAUSADO.** Compila, despliega y corre en juego real (login/catálogo/redeem confirmados con saldo real). Diseño de ambas mecánicas resuelto sin Harmony. Bloqueado por un crash nativo (`AccessViolationException`) en `EntityManager.CreateEntityQuery` al resolver la `Entity` del jugador — curva de integración (IL2CPP + arquitectura de dos procesos) desproporcionada frente a Raft/Valheim. Se prioriza el resto del catálogo. Ver `SETUP.md` para retomarlo |
 | `StardewValley.LSG.Mod` | SMAPI | **Validado en juego real** (sin ninguna ronda de corrección — primer adaptador así). Speed Buff (mmv=77) y Mining XP (mmv=84) confirmados con efecto real y logs objetivos (`ledger_id` reales). 9 mecánicas más del catálogo quedan pendientes con el mismo patrón. Ver `SETUP.md` |
-| `Terraria.LSG.Mod` | TMODLOADER | No iniciado |
+| `Terraria.LSG.Mod` | TMODLOADER | **Compila y corre en juego real.** Diseño confirmado **contra el código fuente oficial de tModLoader en GitHub** (sin dnSpy), con un ajuste posterior confirmado por el compilador real (`player`→`Player`, `mod`→`Mod`: la instalación tiene una API ligeramente distinta a la rama de GitHub consultada). Mecanismo genérico (`Player.AddBuff`) cubre ~180 de las 211 mecánicas del catálogo real de una sola vez — confirmado con "Araña Buff" (mmv de ejemplo). Player Movement Speed (mmv=16) confirmado con log de diagnóstico antes/después. **No está en `LSG.SDK.sln`** a propósito — su `.csproj` real vive en `ModSources\`, no en este repo (ver `SETUP.md`) |
 | ~~`CoreKeeper.LSG.Mod`~~ | ~~BEPINEX~~ | **Archivado** (`adapters/_archived/`) - descartado por infactibilidad de modding, ver `ARCHIVED.md`. Reemplazado por Raft. |
 
 > Garry's Mod (reemplazo de Starbound) NO pertenece a este repo - es `LUA_SCRIPT`, corresponde a `lsg-sdk-lua` (repo aún no creado).
@@ -59,8 +60,12 @@ Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargada
 
 ## Changelog
 
-### v1.2.0 (2026-09-01)
+### v1.2.0 (2026-08-31)
 
+- Adaptador de Terraria completado:
+  - Login interactivo y HUD con balance en tiempo real.
+  - Mecánicas implementadas: Araña Buff y Speed Buff.
+  - Catch-up automático de eventos offline.
 - Adaptador de Stardew Valley completado:
   - Login interactivo y HUD con balance en tiempo real.
   - Mecánicas implementadas: Speed Buff y Mining XP.
