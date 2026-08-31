@@ -50,12 +50,12 @@ namespace VRisingLsgMod
         private DateTimeOffset _lastOfflineFlush = DateTimeOffset.UtcNow;
 
         /// <summary>
-        /// IL2CPP: BasePlugin.Load() reemplaza a Awake()/BaseUnityPlugin — este
+        /// IL2CPP: BasePlugin.Load() reemplaza a Awake()/BaseUnityPlugin - este
         /// plugin NO es un MonoBehaviour por defecto (a diferencia de Raft/Valheim,
         /// que heredan de BaseUnityPlugin y sí lo son). Por eso todavía no hay HUD
         /// (OnGUI) acá: requeriría registrar una clase adicional en IL2CPP vía
         /// ClassInjector.RegisterTypeInIl2Cpp&lt;T&gt;() y agregarla como componente
-        /// a un GameObject — pendiente para v1.0, ver README/SETUP.
+        /// a un GameObject - pendiente para v1.0, ver README/SETUP.
         /// </summary>
         public override void Load()
         {
@@ -71,7 +71,7 @@ namespace VRisingLsgMod
             _interpreter = new VRisingEffectInterpreter(Log);
 
             _mechanics.OnPlaceholderOptionsDetected += m =>
-                Log.LogWarning($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales — revisar catálogo.");
+                Log.LogWarning($"Mecánica '{m.Name}' (mmv={m.MmvId}) sin options reales - revisar catálogo.");
 
             _timedEffects.OnExpired += effect =>
             {
@@ -79,7 +79,7 @@ namespace VRisingLsgMod
                 Log.LogInfo($"Efecto expirado y revertido: {effect.Mechanic.Name} (mmv={effect.Mechanic.MmvId})");
             };
 
-            Log.LogInfo($"{PluginName} v{PluginVersion} cargado (IL2CPP, sin Harmony — ninguna de las dos mecánicas lo necesita).");
+            Log.LogInfo($"{PluginName} v{PluginVersion} cargado (IL2CPP, sin Harmony - ninguna de las dos mecánicas lo necesita).");
 
             // Mismo mecanismo que Raft/Valheim: System.Threading.Timer puro de
             // .NET, no depende de ningún callback de Unity.
@@ -88,19 +88,19 @@ namespace VRisingLsgMod
 
             if (_autoLoginOnStart.Value && !string.IsNullOrWhiteSpace(_lsgEmail.Value) && !string.IsNullOrWhiteSpace(_lsgPassword.Value))
             {
-                Log.LogInfo("AutoLoginOnStart habilitado — iniciando sesión con credenciales de BepInEx/config...");
+                Log.LogInfo("AutoLoginOnStart habilitado - iniciando sesión con credenciales de BepInEx/config...");
                 _ = LoginAndInitializeAsync(_lsgEmail.Value, _lsgPassword.Value);
             }
             else
             {
-                Log.LogInfo("Sin credenciales en config y sin HUD todavía (v0.1) — no se puede loguear. Completa Email/Password en el .cfg.");
+                Log.LogInfo("Sin credenciales en config y sin HUD todavía (v0.1) - no se puede loguear. Completa Email/Password en el .cfg.");
             }
         }
 
         private void BindConfig()
         {
             _lsgEmail = Config.Bind("LSG Credentials", "Email", "",
-                "Email de la cuenta LSG. v0.1 no tiene HUD todavía — esta es la ÚNICA vía de login por ahora.");
+                "Email de la cuenta LSG. v0.1 no tiene HUD todavía - esta es la ÚNICA vía de login por ahora.");
             _lsgPassword = Config.Bind("LSG Credentials", "Password", "",
                 "Password en texto plano. Cuenta de prueba, no producción.");
             _autoLoginOnStart = Config.Bind("LSG Credentials", "AutoLoginOnStart", true,
@@ -117,7 +117,7 @@ namespace VRisingLsgMod
 
             _autoTestRedeem = Config.Bind("LSG Test", "AutoTestRedeemOnLogin", true,
                 "Si es true, dispara automáticamente ambos canjes 8s después del login " +
-                "(no hay HUD/botón todavía en v0.1 — ver Plugin.Load()).");
+                "(no hay HUD/botón todavía en v0.1 - ver Plugin.Load()).");
         }
 
         private void MaintenanceTick(object? state)
@@ -145,14 +145,14 @@ namespace VRisingLsgMod
             {
                 var session = await _auth.LoginAsync(email, password);
                 _playerId = session.Player.IdPlayers;
-                Log.LogInfo($"Login OK — player_id={_playerId}, roles=[{string.Join(",", session.Player.Roles)}]");
+                Log.LogInfo($"Login OK - player_id={_playerId}, roles=[{string.Join(",", session.Player.Roles)}]");
 
                 await _mechanics.RefreshAsync();
                 Log.LogInfo($"Catálogo de mecánicas cargado: {_mechanics.All.Count} mecánica(s) para game_id={LsgGameId}.");
 
                 if (_autoTestRedeem.Value)
                 {
-                    Log.LogInfo("Prueba automática de canje programada en 8s (sin HUD todavía — ver nota en Load()).");
+                    Log.LogInfo("Prueba automática de canje programada en 8s (sin HUD todavía - ver nota en Load()).");
                     _autoTestTimer = new System.Threading.Timer(_ =>
                     {
                         _autoTestTimer?.Dispose();

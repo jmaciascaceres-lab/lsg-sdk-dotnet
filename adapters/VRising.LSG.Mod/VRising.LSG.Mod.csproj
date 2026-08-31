@@ -83,6 +83,10 @@
       <HintPath>$(VRISING_INTEROP_PATH)\ProjectM.Gameplay.Systems.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="ProjectM.CodeGeneration">
+      <HintPath>$(VRISING_INTEROP_PATH)\ProjectM.CodeGeneration.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Stunlock.Core">
       <HintPath>$(VRISING_INTEROP_PATH)\Stunlock.Core.dll</HintPath>
       <Private>false</Private>

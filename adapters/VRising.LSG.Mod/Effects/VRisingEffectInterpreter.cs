@@ -15,20 +15,20 @@ namespace VRisingLsgMod.Effects
     ///
     ///   Movement Speed Boost -> DebugEventsSystem.ApplyBuff con un PrefabGUID
     ///     de un buff de velocidad ya existente en el juego (ej. -911970381,
-    ///     "Voltatia's Electric Speed Buff" — confirmado como funcional por la
+    ///     "Voltatia's Electric Speed Buff" - confirmado como funcional por la
     ///     comunidad de modding, no verificado directo en nuestro dump ya que
     ///     los PrefabGUID son datos, no código), luego sobreescribir
     ///     ModifyMovementSpeedBuff.MoveSpeed en la Entity del buff resultante.
-    ///     Patrón tomado de KindredCommands (Buffs.cs, open-source, AGPL-3.0) —
+    ///     Patrón tomado de KindredCommands (Buffs.cs, open-source, AGPL-3.0) -
     ///     ADAPTADO, no copiado literal; los nombres de LifeTime/extensiones
     ///     Has/Add/Remove de esa referencia son de SU propio ECSExtensions.cs,
-    ///     no del juego — acá se usa la API estándar de EntityManager en su lugar.
+    ///     no del juego - acá se usa la API estándar de EntityManager en su lugar.
     ///
     ///   Blood Quality Insight -> escritura directa de Blood.Quality en la
     ///     Entity del jugador (IComponentData simple, sin necesidad de ningún
     ///     sistema de buffs).
     ///
-    /// PENDIENTE: ambos métodos necesitan una Entity de jugador real —
+    /// PENDIENTE: ambos métodos necesitan una Entity de jugador real -
     /// ver VWorld.TryGetTargetPlayerEntity (aún no implementado). Mientras
     /// tanto, Apply() falla de forma controlada y clara si no hay Entity.
     /// </summary>
@@ -37,7 +37,7 @@ namespace VRisingLsgMod.Effects
         private const int MmvMovementSpeedBoost = 64;
         private const int MmvBloodQualityInsight = 65;
 
-        // Voltatia's Electric Speed Buff — PrefabGUID reportado como funcional
+        // Voltatia's Electric Speed Buff - PrefabGUID reportado como funcional
         // por la comunidad de modding (hilo de Steam, no verificado contra nuestro
         // propio dump ya que es un dato de contenido, no código). Confirmar con
         // .listbuffs / KindredCommands si el valor cambia en una actualización del juego.
@@ -58,7 +58,7 @@ namespace VRisingLsgMod.Effects
         {
             var serverWorld = VWorld.GetServerWorld();
             if (serverWorld is null)
-                return EffectApplicationResult.Failed("No se encontró el World \"Server\" — ver log de World.All.");
+                return EffectApplicationResult.Failed("No se encontró el World \"Server\" - ver log de World.All.");
 
             // TODO: reemplazar 0 por el player_id real de LSG una vez que el
             // ciclo de canje pase ese dato hasta acá (Plugin.cs).
@@ -66,7 +66,7 @@ namespace VRisingLsgMod.Effects
             if (targetEntity is null)
             {
                 return EffectApplicationResult.Failed(
-                    "Resolución de Entity del jugador aún no implementada — ver VWorld.TryGetTargetPlayerEntity.");
+                    "Resolución de Entity del jugador aún no implementada - ver VWorld.TryGetTargetPlayerEntity.");
             }
 
             return mechanic.MmvId switch
@@ -118,7 +118,7 @@ namespace VRisingLsgMod.Effects
             }
             else
             {
-                _log.LogWarning("El buff spawneado no tiene ModifyMovementSpeedBuff — se aplicó con su velocidad default, no la nuestra.");
+                _log.LogWarning("El buff spawneado no tiene ModifyMovementSpeedBuff - se aplicó con su velocidad default, no la nuestra.");
             }
 
             return EffectApplicationResult.Ok();
