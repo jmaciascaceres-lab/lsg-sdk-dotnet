@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <!-- netstandard2.1 por compatibilidad con Mono/Unity (BepInEx, SMAPI, tModLoader corren sobre Mono/.NET Framework moddeado) -->
+    <TargetFrameworks>netstandard2.1;net48</TargetFrameworks>
+    <!-- netstandard2.1: BepInEx/SMAPI/tModLoader (Mono/.NET Framework moddeado).
+         net48: Cities: Skylines II (Mod.props del toolchain oficial fija
+         net48 explícito) — .NET Framework NUNCA soporta netstandard2.1 (solo
+         hasta netstandard2.0), así que sin este segundo target el proyecto de
+         CS2 no puede referenciar este SDK en absoluto (confirmado
+         2026-08-25, documentación oficial de Microsoft). -->
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
     <RootNamespace>LSG.SDK.Core</RootNamespace>

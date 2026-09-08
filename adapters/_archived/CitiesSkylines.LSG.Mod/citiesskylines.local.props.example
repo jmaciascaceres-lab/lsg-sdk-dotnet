@@ -1,0 +1,7 @@
+<Project>
+  <!-- Copiar como "citiesskylines.local.props" (sin ".example") y completar
+       con tus rutas reales. No se versiona (ver .gitignore). -->
+  <PropertyGroup>
+    <CITIES_MANAGED_PATH>C:\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed</CITIES_MANAGED_PATH>
+  </PropertyGroup>
+</Project>

@@ -1,6 +1,6 @@
 # LSG .NET SDK (lsg-sdk-dotnet)
 
-Versión: v1.2.0 (2026-08-31)
+Versión: v1.1.1 (2026-07-15)
 
 Repositorio único para el **runtime .NET/C#** del ecosistema de mods LSG. Agrupa el SDK-core reusable y los adaptadores de cada juego que comparta este runtime (BepInEx, SMAPI, tModLoader, API de mods de Cities: Skylines).
 
@@ -23,8 +23,6 @@ lsg-sdk-dotnet/
 └── adapters/
     ├── Raft.LSG.Mod/ ← cerrado, v1.1.1 (plantilla de referencia)
     ├── Valheim.LSG.Mod/ ← validado end-to-end, v0.2.0
-    ├── StardewValley.LSG.Mod/ ← validado end-to-end, v0.1.0
-    ├── Terraria.LSG.Mod/ ← validado end-to-end, v0.2.0
     └── _archived/
         ├── CoreKeeper.LSG.Mod/ ← descartado, ver ARCHIVED.md
         └── VRising.LSG.Mod/    ← archivado, ver ARCHIVED.md (bloqueado por crash nativo IL2CPP)
@@ -52,25 +50,16 @@ Raft y Valheim ya resolvieron (y documentaron) los mismos gotchas de entorno. Cu
 | `Subnautica.LSG.Mod` | BEPINEX | **Pausado** (despriorizado, sin el juego comprado por ahora) |
 | `StardewValley.LSG.Mod` | SMAPI | **Validado en juego real** (sin ninguna ronda de corrección — primer adaptador así). Speed Buff (mmv=77) y Mining XP (mmv=84) confirmados con efecto real y logs objetivos (`ledger_id` reales). 9 mecánicas más del catálogo quedan pendientes con el mismo patrón. Ver `SETUP.md` |
 | `Terraria.LSG.Mod` | TMODLOADER | **Compila y corre en juego real.** Diseño confirmado **contra el código fuente oficial de tModLoader en GitHub** (sin dnSpy), con un ajuste posterior confirmado por el compilador real (`player`→`Player`, `mod`→`Mod`: la instalación tiene una API ligeramente distinta a la rama de GitHub consultada). Mecanismo genérico (`Player.AddBuff`) cubre ~180 de las 211 mecánicas del catálogo real de una sola vez — confirmado con "Araña Buff" (mmv de ejemplo). Player Movement Speed (mmv=16) confirmado con log de diagnóstico antes/después. **No está en `LSG.SDK.sln`** a propósito — su `.csproj` real vive en `ModSources\`, no en este repo (ver `SETUP.md`) |
+| `CitiesSkylinesII.LSG.Mod` | Modding Toolchain oficial de CS2 (post-2024) — sin cluster todavía definido, distinto de `ICities` (CS1) | `game_id=73` confirmado (juego distinto a CS1, `game_id=14`). No iniciado — arranca ahora. Runtime moderno (.NET Standard 2.1 Mono en CS2, según investigación previa) sin el problema de `HttpClient` que bloqueó CS1. Motor ECS/DOTS + Burst (cautela similar a VRising, sin la complicación de IL2CPP). |
 | ~~`CoreKeeper.LSG.Mod`~~ | ~~BEPINEX~~ | **Archivado** (`adapters/_archived/`) - descartado por infactibilidad de modding, ver `ARCHIVED.md`. Reemplazado por Raft. |
 | ~~`VRising.LSG.Mod`~~ | ~~BEPINEX (IL2CPP)~~ | **Archivado** (`adapters/_archived/`) - login/catálogo/redeem funcionaban en juego real; bloqueado por un crash nativo (`AccessViolationException`) en `EntityManager.CreateEntityQuery` al resolver la `Entity` del jugador. Ver `ARCHIVED.md` para retomarlo si vuelve a ser prioridad. |
+| ~~`CitiesSkylines.LSG.Mod`~~ | ~~CITIES_MODAPI~~ | **Archivado** (`adapters/_archived/`) - Cities: Skylines original (2015, `game_id=14`). Diseño de ambas mecánicas confirmado contra `ICities`, pero el juego está limitado a .NET Framework 3.5 (anterior a `HttpClient`) - bloqueo probablemente fatal para todo `LSG.SDK.Core`. Reemplazado por Cities: Skylines II. Ver `ARCHIVED.md`. |
 
 > Garry's Mod (reemplazo de Starbound) NO pertenece a este repo - es `LUA_SCRIPT`, corresponde a `lsg-sdk-lua` (repo aún no creado).
 
 Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargadas, el diseño de `IEffectInterpreter`, y el historial de incompatibilidades resueltas (Mono/System.Text.Json).
 
 ## Changelog
-
-### v1.2.0 (2026-08-31)
-
-- Adaptador de Terraria completado:
-  - Login interactivo y HUD con balance en tiempo real.
-  - Mecánicas implementadas: Araña Buff y Speed Buff.
-  - Catch-up automático de eventos offline.
-- Adaptador de Stardew Valley completado:
-  - Login interactivo y HUD con balance en tiempo real.
-  - Mecánicas implementadas: Speed Buff y Mining XP.
-  - Catch-up automático de eventos offline.
 
 ### v1.1.1 (2026-07-15)
 
@@ -89,5 +78,6 @@ Ver `src/LSG.SDK.Core/README.md` para el contrato de mecánicas mínimas cargada
 
 ## Referencias
 
-- R. González-Ibáñez, J. I. Macías-Cáceres and M. V. Paucar, "LifeSync-Games: A Technical Note on a Novel Framework for Video Game Development," 2025 44th International Conference of the Chilean Computer Science Society (SCCC), Valparaiso, Chile, 2025, pp. 1-4, doi: 10.1109/SCCC67219.2025.11420722.
-- González-Ibáñez R., Macías-Cáceres J., Villalta-Paucar M. (2025). LifeSync-Games: Toward a Video Game Paradigm for Promoting Responsible Gaming and Human Development. arXiv:2510.19691 [cs.HC]. DOI: https://arxiv.org/abs/2510.19691
+- [1] González-Ibáñez, R., Macías-Cáceres, J., Villalta-Paucar, M. (2025). LifeSync-Games: A Technical Note on a Novel Framework for Video Game Development. 2025 44th International Conference of the Chilean Computer Science Society (SCCC), Valparaiso, Chile, pp. 1-4, doi: 10.1109/SCCC67219.2025.11420722.<br>
+- [2] González-Ibáñez R., Macías-Cáceres J., Villalta-Paucar M., (2025). LifeSync-Games: Toward a Video Game Paradigm for Promoting Responsible Gaming and Human Development. arXiv preprint: 2510.19691 [cs.HC].<br>
+- [3] Macías-Cáceres J., Gutiérrez-Vela F., Paderewski-Rodriguez P., González-Ibáñez, R., (2026). LifeSync-Games: Signal-Driven Pervasive Game Design: The LifeSync-Games Framework as a Player Experience Integration Layer. arXiv preprint: 2609.03169 [cs.HC].

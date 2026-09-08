@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Rutas locales de máquina: ver citiesskylines.local.props.example -->
+  <Import Project="citiesskylines.local.props" Condition="Exists('citiesskylines.local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <!-- Cities: Skylines (el original, 2015) corre sobre Unity 5 + Mono
+         (.NET Framework 3.5 equivalente) - mismo patrón que Raft/Valheim,
+         NO IL2CPP. Sin BepInEx: el juego tiene su propia API oficial de
+         primera parte (ICities), sin necesitar Harmony ni inyección externa. -->
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>CitiesSkylinesLsgMod</RootNamespace>
+    <AssemblyName>CitiesSkylines.LSG.Mod</AssemblyName>
+    <Authors>LifeSync-Games</Authors>
+    <Description>Adaptador LSG para Cities: Skylines vía la API oficial ICities. Cluster: CITIES_MODAPI.</Description>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LSG.SDK.Core\LSG.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- API oficial del juego, en Cities_Data\Managed\ -->
+    <Reference Include="ICities">
+      <HintPath>$(CITIES_MANAGED_PATH)\ICities.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ColossalManaged">
+      <HintPath>$(CITIES_MANAGED_PATH)\ColossalManaged.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(CITIES_MANAGED_PATH)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(CITIES_MANAGED_PATH)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Mismo patrón que Raft/Valheim: fusiona LSG.SDK.Core.dll +
+         Newtonsoft.Json.dll en un solo .dll para copiar a la carpeta Mods/. -->
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.34" />
+  </ItemGroup>
+
+</Project>

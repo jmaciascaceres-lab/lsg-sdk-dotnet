@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Ver explicación completa en adapters/Raft.LSG.Mod/ILRepack.targets.
+       Archivo separado (no target inline en el .csproj) para evitar la
+       doble ejecución ("Duplicate type"). -->
+
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <LsgMergeAssemblies Include="$(TargetPath)" />
+      <LsgMergeAssemblies Include="$(TargetDir)LSG.SDK.Core.dll" />
+      <LsgMergeAssemblies Include="$(TargetDir)Newtonsoft.Json.dll" />
+    </ItemGroup>
+    <ILRepack
+      Parallel="true"
+      Internalize="true"
+      DebugInfo="false"
+      InputAssemblies="@(LsgMergeAssemblies)"
+      OutputFile="$(TargetDir)CitiesSkylines.LSG.Mod.merged.dll"
+      LibraryPath="$(TargetDir);$(CITIES_MANAGED_PATH)"
+      TargetKind="Dll" />
+  </Target>
+
+</Project>
